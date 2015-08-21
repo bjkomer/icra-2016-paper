@@ -1,0 +1,42 @@
+# LaTex output files
+
+*.out
+*.aux
+*.lot
+*.lof
+*.log
+*.toc
+*.pdf
+*.gz
+
+*.bbl
+*.blg
+
+*.acn
+*.acr
+*.alg
+*.glg
+*.glo
+*.gls
+*.ilg
+*.ist
+*.nlo
+*.nls
+
+*.gz
+
+# Swap files
+
+*.swp
+
+# Downloads
+
+*.zip
+
+# Images
+
+*.png
+
+# Ignore reference templates
+
+ieeeconf/*
