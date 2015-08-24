@@ -30,7 +30,7 @@
 \usepackage[flushleft]{threeparttable}
 
 \title{\LARGE \bf
-Adaptive Control of Quadcopter Flight using Biologically Inspired Neural Networks
+Adaptive Quadcopter Control using Biologically Inspired Neural Networks
 }
 
 
@@ -53,7 +53,7 @@ Adaptive Control of Quadcopter Flight using Biologically Inspired Neural Network
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \begin{abstract}
 
-This electronic document is a “live” template. The various components of your paper [title, text, heads, etc.] are already defined on the style sheet, as illustrated by the portions given in this document.
+This paper explores the application of a biologically inspired learning method to produce an adaptive controller for a quadcopter.
 
 \end{abstract}
 
@@ -67,7 +67,15 @@ This electronic document is a “live” template. The various components of your pa
 \section{BACKGROUND}
 
 \subsection{Quadcopter Dynamics}
+
+
+
 \subsection{Adaptive Control}
+
+Often the kinematics and dynamics of the system being controlled are unknown, or change over time in an unknown fashion. 
+A controller that works well for the system initially may no longer be ideal when the system undergoes changes. 
+In this situation, it is useful to have a controller that can adapt to these changes.
+
 \subsection{Neural Simulation}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -76,6 +84,8 @@ This electronic document is a “live” template. The various components of your pa
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{EXPERIMENTS}
+
+% Put in loop figures in this section somewhere
 
 \subsection{Metrics}
 \subsection{Benchmarks}
@@ -114,7 +124,9 @@ Appendixes should appear before the acknowledgment.
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 %\bibliographystyle{IEEEtran}
-%\bibliography{IEEEabrv,mybibfile}
+%\bibliography{IEEEabrv,root}
+\bibliographystyle{IEEEconf}
+\bibliography{root}
 
 %TODO remove this and use bib files instead
 %\begin{thebibliography}{99}
