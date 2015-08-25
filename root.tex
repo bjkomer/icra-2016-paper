@@ -54,6 +54,12 @@ Adaptive Quadcopter Control using Biologically Inspired Neural Networks
 \begin{abstract}
 
 This paper explores the application of a biologically inspired learning method to produce an adaptive controller for a quadcopter.
+Our approach works by first generating a PD control signal based on the error from the quadcopter to its target.
+State information is encoded into an ensemble of spiking leaky integrate-and-fire neurons.
+The Prescribed Error Sensitivity learning rule is applied to this ensemble to produce an additional control signal to be summed with the PD signal.
+The resulting controller is able to learn non-linear functions of system state to account for unknown and changing dynamic properties of the quadcopter in its environment.
+The algorithms used are designed to be implementable on neuromorphic hardware.
+Experiments are performed in simulation to demonstrate the effectiveness of the controller.
 
 \end{abstract}
 
@@ -249,6 +255,8 @@ The time-to-target trials were also run for a total of 30 seconds and a value of
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{CONCLUSIONS}
 
+This paper presents an adaptive control system for a quadcopter using simulated biological neurons.
+
 
 \addtolength{\textheight}{-12cm}   % This command serves to balance the column lengths
                                   % on the last page of the document manually. It shortens
@@ -264,12 +272,6 @@ The time-to-target trials were also run for a total of 30 seconds and a value of
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\section*{APPENDIX}
-
-Appendixes should appear before the acknowledgment.
-
 \section*{ACKNOWLEDGMENT}
 
 
@@ -280,6 +282,8 @@ Appendixes should appear before the acknowledgment.
 
 \bibliographystyle{IEEEtran}
 \bibliography{IEEEabrv,root}
-
+\nocite{*}
+%TODO clean up the reference style to look good in IEEE format
+%TODO reference thesis
 
 \end{document}
