@@ -55,7 +55,7 @@ Adaptive Quadcopter Control using Biologically Inspired Neural Networks
 
 This paper explores the application of a biologically inspired learning method to produce an adaptive controller for a quadcopter.
 Our approach works by first generating a PD control signal based on the error from the quadcopter to its target.
-State information is encoded into an ensemble of spiking leaky integrate-and-fire neurons.
+State information is encoded into an ensemble of spiking Leaky Integrate-and-Fire neurons.
 The Prescribed Error Sensitivity learning rule is applied to this ensemble to produce an additional control signal to be summed with the PD signal.
 The resulting controller is able to learn non-linear functions of system state to account for unknown and changing dynamic properties of the quadcopter in its environment.
 The algorithms used are designed to be implementable on neuromorphic hardware.
@@ -182,7 +182,7 @@ Connections specify transformations between representational components (ensembl
 Connections may have a synapse model applied to them, where the information from one end of the connection is delayed by a time-step before reaching the other end and a filter with a particular time constant may be applied.
 If no synaptic filter is applied, the value from the origin of the connection is sent directly to the termination of the connection during the same time step.
 
-Nengo supports a variety of underlying neuron models for its Ensembles.
+Nengo supports a variety of underlying neuron models for its ensembles.
 The most commonly used is the Leaky Integrate-and-Fire (LIF) neuron \cite{burkitt2006review}.
 %[add a brief description?]. %TODO add this description
 Ensembles can also be run in direct mode, in which functions are computed explicitly rather than with neurons.
@@ -219,6 +219,103 @@ A larger number of neurons means that the changes will be greater, as there will
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{CONTROLLER DESIGN}
 
+The goal of the controller is to actuate the quadcopter in such a way that it travels to a desired position in a reasonable amount of time. 
+This position is specified as a set of $x$, $y$, and $z$ coordinates and a particular yaw direction. 
+The controller is given the state error of the quadcopter and its target, as well as the current linear and angular velocities of the quadcopter. 
+It needs to use this information to generate a suitable control signal.
+
+The adaptive controller here consists of two parts. The first is a standard PD controller that generates a four-dimensional output signal in the space of possible quadcopter motions (task space). 
+The gain matrix that performs this operation can be seen in \eqref{eq:gain_matrix}. 
+This signal is then multiplied by the matrix in \eqref{eq:rotor_transform} to transform it into the four dimensional rotor velocity space, providing the actuation associated with the desired movement commands.
+The design of this matrix depends upon the orientation of the rotor blades to the $x$ and $y$ axes. 
+This transformation matrix assumes that the rotor axes are offset from the $x$ and $y$ axes by 45 degrees as the V-REP model used here.
+
+\begin{equation} \label{eq:gain_matrix}
+K =
+\setcounter{MaxMatrixCols}{12}
+\begin{bmatrix}
+0 & 0 & k_{2} & 0 & 0 & -k_{4} & 0 & 0 & 0 & 0 & 0 & 0 \\
+0 & k_{1} & 0 & 0 & -k_{3} & 0 & -k_{5} & 0 & 0 & k_{7} & 0 & 0 \\
+-k_{1} & 0 & 0 & k_{3} & 0 & 0 & 0 & -k_{5} & 0 & 0 & k_{7} & 0 \\
+0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & -k_{6} & 0 & 0 & k_{8}
+\end{bmatrix}
+\end{equation}
+
+\begin{equation} \label{eq:rotor_transform}
+T_{R} = 
+\begin{bmatrix}
+1 & -1 & 1 & 1 \\
+1 & -1 & -1 & -1 \\
+1 & 1 & -1 & 1 \\
+1 & 1 & 1 & -1
+\end{bmatrix}
+\end{equation}
+
+\begin{equation} \label{eq:control_equation}
+u = 
+\begin{bmatrix}
+w_{1}^{2} \\
+w_{2}^{2} \\
+w_{3}^{2} \\
+w_{4}^{2}
+\end{bmatrix}
+= T_{R}K
+\begin{bmatrix}
+x \\
+y \\
+z \\
+\dot{x} \\
+\dot{y} \\
+\dot{z} \\
+\phi \\
+\theta \\
+\psi \\
+\dot{\phi} \\
+\dot{\theta} \\
+\dot{\psi} \\
+\end{bmatrix}
+\end{equation}
+%TODO make this equation look prettier on paper. There also might need to be tildes and things on the variables to show that they are state error.
+
+Translation in the $x$ and $y$ directions is dependent on the states of both $x$ and $y$ as well as roll and pitch, because a roll in the quadcopter causes a component of thrust to be applied in the $y$ direction, and a pitch causes a component of thrust to be applied in the $x$ direction.
+A delicate balance needs to be found between each of the gains in order to create a stable, functioning controller. 
+The setpoint for each of the velocities as well as for roll and pitch is zero.
+
+%[gain matrix figures]
+
+%[talk about egocentric state as the error]
+The state error is measured relative to the body frame because most sensors on a real quadcopter would return measurements relative to the sensor device itself, which is located on the quadcopter. Absolute measurements could still be obtained with a GPS device, but would typically be much less accurate and such devices are harder to use for fine-tuned control. Using localized sensors, the state of the quadcopter can be defined relative to its target, making the state in the same coordinates as the error.
+
+%[talk about building the model in Nengo]
+Here the controller is implemented with a Nengo network, in which a 12-dimensional ensemble representing the state error can be projected to a 4-dimensional ensemble representing the desired control command. 
+The transformation done through this projection will be by the 12x4 PD gain matrix of the controller \eqref{eq:gain_matrix}. 
+This 4-dimensional ensemble is then projected to another 4-dimensional ensemble which represents the four desired angular velocities of the quadcopter's rotors. 
+This projection is done through a transformation by the 4x4 rotor matrix \eqref{eq:rotor_transform}. 
+This rotor velocity ensemble is connected to a node representing the physical quadcopter, which in turn feeds back into the state error ensemble. 
+The network diagram is shown in \ref{fig:NetBasic}. 
+The network can be simplified further by multiplying the gain matrix with the rotor matrix to give a single transformation matrix from state error to rotor velocity. 
+This simplified and functionally equivalent network is shown in \ref{fig:NetSimplified}.
+The larger network is used in the remainder of this thesis because it is more explicit regarding how each signal is used, and allows greater flexibility for design improvements and system debugging.
+
+%[Figure of simple control model without adaptation]
+%[Also figure of simplified model without task space representation]
+\begin{figure}
+\centering
+\includegraphics[height=0.3\textheight]{./figures/QuadcopterNetworkSimpleLegend.pdf} %TODO get better quality figure
+\caption{Basic Quadcopter Controller Network}
+\label{fig:NetBasic}
+\captionsetup{singlelinecheck=off,font=footnotesize}
+\caption*{
+%Light gray rounded rectangles represent ensembles running in direct mode, dark grey rectangles represent transformations applied to connections, and the blue rounded rectangle represents a node that interacts with the V-REP simulator.
+}
+\end{figure}
+
+\begin{figure}
+\centering
+\includegraphics[height=0.20\textheight]{./figures/QuadcopterNetworkSimplifiedLegend.pdf} %TODO get better quality figure
+\caption{Simplified Quadcopter Controller Network}
+\label{fig:NetSimplified}
+\end{figure}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{EXPERIMENTS}
