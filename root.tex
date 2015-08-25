@@ -196,7 +196,7 @@ If the time-step is short, the simulation can capture minute timing details more
 
 \subsection{Adaptive Control with Nengo}
 
-In this thesis, we use the adaptive control methods described above to build a quadcopter controller using Nengo. 
+We use the adaptive control methods described above to build a quadcopter controller using Nengo. 
 An ensemble of simulated neurons is used as the set of basis functions for the physical model, and the decoders of these neurons are used as the vector of unknown constant parameters. 
 A biologically plausible learning rule known as the Prescribed Error Sensitivity (PES) rule is used to update the decoder values \cite{bekolay2013simultaneous}. 
 
@@ -211,10 +211,28 @@ The direction in which the decoder values change is dependent on the sign of the
 The magnitude of the change in decoder values at each time step is dependent on both the magnitude of the error and a learning-rate parameter. 
 The learning rate is a dimensionless parameter that needs to be tuned for the specific application. 
 It is dependent on the simulation time step, the number of neurons in the state ensemble, as well as how responsive the model needs to be to changes. 
-%TODO [[check to make sure this is true!!]] 
 A larger learning rate will cause larger reactions to error, effectively making the system trust its current measurements more than historical ones. 
 A smaller time-step means that these changes will occur more frequently, so the net change over time will be greater. 
 A larger number of neurons means that the changes will be greater, as there will be more decoders changing. The overall transformation is a sum of these decoders. 
+
+\subsection{Simulation}
+
+The Virtual Robotics Experimentation Platform (V-REP) \cite{vrep} is used to validate and test the quadcopter controller.
+This software package contains models of various robotic platforms, including a model of a quadcopter; and allows the construction of intricate 3D virtual environments for the quadcopter to interact with.
+External forces can be applied to the quadcopter from within this environment.
+%This simulation environment allows
+%Within this environment
+An example of a region within the simulation environment is shown in \ref{fig:vrep_screenshot}.
+
+\begin{figure}
+\centering
+\includegraphics[width=0.5\textwidth]{./figures/VREPScreenshot.png}
+\caption{Simulation Environment in V-REP}
+\label{fig:vrep_screenshot}
+\captionsetup{singlelinecheck=off,font=footnotesize}
+\caption*{
+Screen capture of an example environment in V-REP. The coloured areas with arrows represent regions of space where a wind force is applied to the quadcopter in the direction of the arrows. The blue region resembling a circuit board represents an area where an unknown non-linear force will be applied to the quadcopter. The semi-transparent green sphere is the target location. The quadcopter has reached its target in this example.}
+\end{figure}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{CONTROLLER DESIGN}
@@ -297,22 +315,16 @@ The network can be simplified further by multiplying the gain matrix with the ro
 This simplified and functionally equivalent network is shown in \ref{fig:NetSimplified}.
 The larger network is used in the remainder of this thesis because it is more explicit regarding how each signal is used, and allows greater flexibility for design improvements and system debugging.
 
-%[Figure of simple control model without adaptation]
-%[Also figure of simplified model without task space representation]
 \begin{figure}
 \centering
-\includegraphics[height=0.3\textheight]{./figures/QuadcopterNetworkSimpleLegend.pdf} %TODO get better quality figure
+\includegraphics[width=0.4\textwidth]{./figures/QuadcopterNetworkSimpleLegend.pdf}
 \caption{Basic Quadcopter Controller Network}
 \label{fig:NetBasic}
-\captionsetup{singlelinecheck=off,font=footnotesize}
-\caption*{
-%Light gray rounded rectangles represent ensembles running in direct mode, dark grey rectangles represent transformations applied to connections, and the blue rounded rectangle represents a node that interacts with the V-REP simulator.
-}
 \end{figure}
 
 \begin{figure}
 \centering
-\includegraphics[height=0.20\textheight]{./figures/QuadcopterNetworkSimplifiedLegend.pdf} %TODO get better quality figure
+\includegraphics[width=0.4\textwidth]{./figures/QuadcopterNetworkSimplifiedLegend.pdf}
 \caption{Simplified Quadcopter Controller Network}
 \label{fig:NetSimplified}
 \end{figure}
@@ -320,7 +332,7 @@ The larger network is used in the remainder of this thesis because it is more ex
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{EXPERIMENTS}
 
-% Put in loop figures in this section somewhere
+%TODO Put in loop figures in this section somewhere
 
 \subsection{Metrics}
 
