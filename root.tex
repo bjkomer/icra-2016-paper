@@ -422,6 +422,10 @@ The network diagram of the final design of the adaptive controller is shown in \
 \caption*{Network diagram of the adaptive quadcopter controller. \textit{Quadcopter} is a node that interfaces with the V-REP simulator. It takes as input the four rotor velocities coming from \textit{Motor} and outputs the 12-dimensional \textit{State Error} ($x$, $y$, $z$, roll, pitch, yaw, and their respective derivatives) as well as the 4-dimensional location of the \textit{Target} ($x$, $y$, $z$, and yaw). \textit{Target Difference} contains the difference between \textit{Target} and the value of \textit{Target} through a lowpass filter. \textit{State with Target} is a 16-dimensional ensemble containing the concatenation of its inputs, and its output undergoes a transformation to produce the error signal for the PES rule. \textit{Adaptation} is an ensemble of LIF neurons which represent the value of \textit{State Error}. \textit{Task} is a 4-dimensional ensemble representing the task-space control signal. Its input is the sum of the \textit{State Error} multiplied by a 12x4 gain matrix and the non-linear learned transformation from \textit{Adaptation}. The output of \textit{Task} is multiplied by a 4x4 matrix which transforms the signal into the appropriate rotor velocities to actuate the system.}
 \end{figure}
 
+\subsection{Gain Tuning}
+
+
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{EXPERIMENTS}
 
@@ -467,7 +471,7 @@ The non-adaptive controllers show no such improvement over time.
 \centering
 \includegraphics[width=0.32\textwidth]{./figures/LoopAdaptive.png}
 \includegraphics[width=0.32\textwidth]{./figures/LoopPD.png}
-\includegraphics[width=0.32\textwidth]{./figures/LoopPIDtf.png}
+\includegraphics[width=0.32\textwidth]{./figures/LoopPIDName.png}
 \caption{Path of Quadcopter between Two Points with External Forces} %mention something about how the experiment was done here? it was 100 seconds total with 5 seconds before the point switches
 \label{fig:loop_path}
 \captionsetup{singlelinecheck=off,font=footnotesize}
