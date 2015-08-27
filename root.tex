@@ -67,13 +67,14 @@ Experiments are performed in simulation to demonstrate the effectiveness of the 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{INTRODUCTION}
 
+%TODO maybe this should be trimmed a little, and focus more on the adaptive control side rather than motivation
+
 Humans have an exceptional ability to be able to adapt to their surroundings.
 In particular the human motor control system is able to compensate for changes in forces, torques, and inertial effects on the body.
 For example, when picking up an object such as a hammer, the weight of the hammer will apply external forces to the hand.
 This will change the dynamic properties of the hand and arm movements, yet the human motor control system is able to easily compensate for these changes and accurately control movement with the object.
 Even if an object has never been encountered before, the human brain is able to calculate the correct changes in timing and muscle tensions in order to skilfully manipulate the object.
 The predictive capabilities of the brain, along with the plasticity of neural connections in the motor area help guide these sophisticated behaviours.
-
 
 This ability for quick and easy adaptation to new dynamic properties of a system would be extremely useful in robotics. 
 Applying similar methods of control that have been developed over millions of years of evolution in the brain to a robotic control system could result in major improvements. 
@@ -83,11 +84,19 @@ Now they are being used increasingly in more complex situations requiring a dive
 When the precise environment that the robot will operate in is not fully known, it is useful for any control system that the robot uses to be adaptable to those environments.
 
 Another advantage the brain has when it comes to control, is that it uses very little power, about 20 Watts on average \cite{hart1975brain}.
-% the motor is the majority of the power on a quadcopter, so neuromorphic hardware might not help much here
 Hardware inspired by the brain is being designed to take advantage of this low power paradigm. 
 This style of hardware, known as neuromorphic hardware, is typically massively parallel and consumes much less power than traditional hardware.
 Computational power efficiency for biological systems is 8-9 orders of magnitude better than the power efficiency for digital computation \cite{hasler2013finding}.
 The algorithms explored in this paper focus on being biologically plausible in order to take advantage of such hardware.
+
+%TODO this paragraph sounds gross, and will need some work
+A Quadcopter is an excellent robotic platform on which to implement brain-like control algorithms.
+Quadcopters are widely available, cheap, and have many potential applications.
+The environment in which a quadcopter operates can vary dramatically, causing changes in the dynamic properties of the system (e.g. changing wind conditions, or picking up a load of unknown mass).
+An adaptive control system is well suited for accounting for these changes.
+Quadcopters also suffer from a relatively short battery life, which neuromorphic hardware could help with.
+While the majority of the power consumed by a quadcopter goes towards the rotors, some is still used by the on-board control system.
+As the sophistication of the control system increases, the computational demands will follow, leading to less overall flight time if the hardware used is not highly power efficient.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{BACKGROUND}
@@ -382,6 +391,8 @@ This signal is four-dimensional, corresponding to the four dimensions of state b
 \begin{figure}
 \centering
 %\includegraphics[width=0.4\textwidth]{./figures/TMCSignal.png}
+\includegraphics[width=0.2\textwidth]{./figures/TMCPlot1.png}
+\includegraphics[width=0.2\textwidth]{./figures/TMCPlot2.png}
 \caption{Learning Inhibition Signal}
 \label{fig:TMCSignal}
 \end{figure}
@@ -415,7 +426,7 @@ The network diagram of the final design of the adaptive controller is shown in \
 
 \begin{figure}
 \centering
-\includegraphics[width=0.4\textwidth]{./figures/QuadcopterNetworkTMCSimplifiedLegend.pdf} %TODO redo the name of the transform on this figure to match the paper better (remove TMC)
+\includegraphics[width=0.4\textwidth]{./figures/QuadcopterNetworkTMCSimplifiedICRALegend.pdf} %TODO redo the name of the transform on this figure to match the paper better (remove TMC)
 \caption{Adaptive Quadcopter Controller Network}
 \label{fig:NetFinal}
 \captionsetup{singlelinecheck=off,font=footnotesize}
@@ -433,29 +444,35 @@ The network diagram of the final design of the adaptive controller is shown in \
 
 \subsection{Metrics}
 
-Three metrics are used to evaluate performance on these tasks. 
-The first is the Root Mean Squared (RMS) error of the difference between the quadcopter's current state and its target state.
+Two metrics are used to evaluate performance on these tasks. 
+The first is the Root Mean Squared (RMS) error of the difference between the quadcopter's current state and its desired trajectory.
 The quadcopter's state consists of position, velocity, orientation, and angular velocity.
 These state variables are combined by computing the length of the resulting 12-dimensional error vector to produce a single quantity.
 This value is calculated at each time-step for the duration of the run and then averaged by the number of time-steps in the run.
-For point to point control this error is sometimes not the most informative because as soon as the target point has changed a large error value will be recorded even if the quadcopter is moving optimally towards its target.
 
-The second metric is a modified version of the RMS error designed to take the desired trajectory into account.
-This works by ignoring any error along the direction to the target as long as the current velocity is also in that direction.
-It also ignores any error caused by the velocity in the correct direction as long as the quadcopter is not currently at its target.
-There are also weights placed on specific types of errors to reflect an increased desire to minimize those errors.
-For example, errors caused by overshooting the target are weighted more heavily.
-
-The third metric is the time taken for the quadcopter to reach its target within a particular tolerance. 
+The second metric is the time taken for the quadcopter to reach its target within a particular tolerance. 
 This metric favours controllers that can reach the target quickly.
 This metric does not worry about overshoot and non-optimal trajectories as long as steady state is achieved at the target in the end.
 The particular tolerance chosen for these experiments is maintaining an RMS error of less than 0.001 for a duration of one second.
 
-The majority of the benchmarks performed in this paper will report results using the trajectory RMS error and the time-to-target metric.
-The RMS metrics were recorded over a 30 second simulation time.
-The time-to-target trials were also run for a total of 30 seconds and a value of 30 is recorded if the quadcopter never reaches its target within tolerance over that duration.
+Both metrics are recorded over a 30 second simulation time.
+A value of 30 is recorded in the time-to-target trials if the quadcopter never reaches its target within tolerance over that duration.
 
 \subsection{Benchmarks}
+
+In order to evaluate the effectiveness of the adaptive controller against more conventional controllers, a set of benchmark tasks is used.
+These tasks involve
+
+\begin{figure}
+\centering
+%\includegraphics[width=0.4\textwidth]{./figures/BarTime.png}
+\caption{Performance on Benchmark Tasks}
+\label{fig:Benchmarks}
+\captionsetup{singlelinecheck=off,font=footnotesize}
+\caption*{}
+\end{figure}
+
+
 \subsection{Improvement over Time}
 
 The previous experiments only track performance for a single short run. 
