@@ -65,7 +65,7 @@ Experiments are performed in simulation to demonstrate the effectiveness of the 
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\section{INTRODUCTION}
+\section{Introduction}
 
 %TODO maybe this should be trimmed a little, and focus more on the adaptive control side rather than motivation
 
@@ -99,7 +99,7 @@ While the majority of the power consumed by a quadcopter goes towards the rotors
 As the sophistication of the control system increases, the computational demands will follow, leading to less overall flight time if the hardware used is not highly power efficient.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\section{BACKGROUND}
+\section{Background}
 
 \subsection{Quadcopter Flight}
 %TODO should dynamics equations go here too? Even though they aren't necessary for the neural controller?
@@ -118,7 +118,7 @@ By varying the relative speeds of each rotor, the quadcopter is able to create a
 
 A quadcopter performs four common actions to move around in its environment, with a distinct pattern of rotor actuation for each one: 
 tilt forward/backward, tilt left/right, rotate, and move up/down. 
-A quadcopter can perform any combination of these actions, and with different magnitudes of each. The relative rotor speeds required for each are shown in \ref{fig:actions}. This set of actions make up what is referred to as the `task space' of the quadcopter in the remainder of this paper.
+A quadcopter can perform any combination of these actions, and with different magnitudes of each. The relative rotor speeds required for each are shown in Figure \ref{fig:actions}. This set of actions make up what is referred to as the `task space' of the quadcopter in the remainder of this paper.
 
 \begin{figure}
 \centering
@@ -254,7 +254,7 @@ This software package contains models of various robotic platforms, including a 
 External forces can be applied to the quadcopter from within this environment.
 %This simulation environment allows
 %Within this environment
-An example of a region within the simulation environment is shown in \ref{fig:vrep_screenshot}.
+An example of a region within the simulation environment is shown in Figure \ref{fig:vrep_screenshot}.
 
 \begin{figure}
 \centering
@@ -267,7 +267,7 @@ Screen capture of an example environment in V-REP. The coloured areas with arrow
 \end{figure}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\section{CONTROLLER DESIGN}
+\section{Controller Design}
 
 The goal of the controller is to actuate the quadcopter in such a way that it travels to a desired position in a reasonable amount of time. 
 This position is specified as a set of $x$, $y$, and $z$ coordinates and a particular yaw direction. 
@@ -334,7 +334,7 @@ The transformation done through this projection will be by the 12x4 PD gain matr
 This 4-dimensional ensemble is then projected to another 4-dimensional ensemble which represents the four desired angular velocities of the quadcopter's rotors. 
 This projection is done through a transformation by the 4x4 rotor matrix \eqref{eq:rotor_transform}. 
 This rotor velocity ensemble is connected to a node representing the physical quadcopter, which in turn feeds back into the state error ensemble. 
-The network diagram is shown in \ref{fig:NetBasic}. 
+The network diagram is shown in Figure \ref{fig:NetBasic}. 
 The network can be simplified further by multiplying the gain matrix with the rotor matrix to give a single transformation matrix from state error to rotor velocity. 
 
 \begin{figure}
@@ -360,7 +360,7 @@ If there is an external force in the horizontal direction (such as wind) the qua
 Being in this state produces a non-zero PD control signal, causing the quadcopter to move away from its target until it reaches a location where the PD control signal is zero.
 For each possible pair of stable roll and pitch angles there exists a pair of $x$ and $y$ displacements from the target that result in a PD control signal of zero.
 These points correspond to locations in the null space of the PD gain matrix.
-A simple example of this effect is shown in \ref{fig:zeroError}.
+A simple example of this effect is shown in Figure \ref{fig:zeroError}.
 
 \begin{figure}
 \centering
@@ -384,23 +384,21 @@ Assuming the neurons are already computing the correct adaptive control signal f
 To overcome this issue, the controller needs a way to distinguish between errors caused by the target moving and errors caused by a change in system dynamics.
 A simple and effective solution is to inhibit learning when the target has moved recently.
 This is accomplished by applying a low-pass filter to the signal representing the target location and then taking the difference between the target location and the low-pass filtered target location.
-The resulting signal becomes large when the target moves and then progressively decays back towards zero over time, as depicted in \ref{fig:TMCSignal}.
+The resulting signal becomes large when the target moves and then progressively decays back towards zero over time, as depicted in Figure \ref{fig:TMCSignal}.
 This signal is four-dimensional, corresponding to the four dimensions of state being controlled ($x$, $y$, $z$, and yaw) and is used to inhibit learning in those particular dimensions accordingly.
 
 %TODO put in better quality figure here
 \begin{figure}
 \centering
-%\includegraphics[width=0.4\textwidth]{./figures/TMCSignal.png}
 \includegraphics[width=0.2\textwidth]{./figures/TMCPlot1.png}
 \includegraphics[width=0.2\textwidth]{./figures/TMCPlot2.png}
 \caption{Learning Inhibition Signal}
 \label{fig:TMCSignal}
 \end{figure}
 
-\ref{fig:ImprovementComparison} compares the performance of an adaptive controller with each enhancement to one without, showing substantial improvement from these approaches.
-The network diagram of the final design of the adaptive controller is shown in \ref{fig:NetFinal}.
+Figure \ref{fig:ImprovementComparison} compares the performance of an adaptive controller with each enhancement to one without, showing substantial improvement from these approaches.
+The network diagram of the final design of the adaptive controller is shown in Figure \ref{fig:NetFinal}.
 
-%TODO put the proper subcaptions here
 \begin{figure}
 \centering
 \begin{subfigure}[t]{0.15\textwidth}
@@ -421,12 +419,12 @@ The network diagram of the final design of the adaptive controller is shown in \
 \caption{Controller Improvements}
 \label{fig:ImprovementComparison}
 \captionsetup{singlelinecheck=off,font=footnotesize}
-\caption*{The quadcopter is initially hovering at the $x$-$y$ location (0,0) and is commanded to move to (0,1). After travelling 0.75 meters, the quadcopter enters a region which applies an external force in the positive $x$ direction. The controller needs to compensate for this unmodelled disturbance to reach the target. (a) The error signal given to the PES rule is the same as the PD control signal. (b) The error signal given to the PES rule comes from a gain matrix that masks out roll and pitch information. (c) The error signal to the PES rule does not contain roll or pitch information and is also inhibited by recent target movement.}
+\caption*{The quadcopter is initially hovering at the $x$-$y$ location [0,0] and is commanded to move to [0,1]. After travelling 0.75 meters, the quadcopter enters a region which applies an external force in the positive $x$ direction. The controller needs to compensate for this unmodelled disturbance to reach the target. (a) The error signal given to the PES rule is the same as the PD control signal. (b) The error signal given to the PES rule comes from a gain matrix that masks out roll and pitch information. (c) The error signal to the PES rule does not contain roll or pitch information and is also inhibited by recent target movement.}
 \end{figure}
 
 \begin{figure}
 \centering
-\includegraphics[width=0.4\textwidth]{./figures/QuadcopterNetworkTMCSimplifiedICRALegend.pdf} %TODO redo the name of the transform on this figure to match the paper better (remove TMC)
+\includegraphics[width=0.4\textwidth]{./figures/QuadcopterNetworkTMCSimplifiedICRALegend.pdf}
 \caption{Adaptive Quadcopter Controller Network}
 \label{fig:NetFinal}
 \captionsetup{singlelinecheck=off,font=footnotesize}
@@ -435,12 +433,26 @@ The network diagram of the final design of the adaptive controller is shown in \
 
 \subsection{Gain Tuning}
 
+The adaptive control system contains twelve different gains that need to be tuned.
+Eight of these are for the PD gain matrix, and four are for the gain matrix of the PES rule error signal.
+Due to the difficulty in tuning these gains manually, the automated parameter optimization software Hyperopt \cite{bergstra2015hyperopt} is used to tune all twelve gains simultaneously.
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\section{EXPERIMENTS}
+\section{Experiments}
 
-%TODO Put in loop figures in this section somewhere
+\subsection{Benchmarks}
+
+In order to evaluate the effectiveness of the adaptive controller against more conventional controllers, a set of benchmark tasks is used.
+The tasks chosen involve movement in the horizontal direction under the influence of four different external force conditions: no force, a constant force, the force is a function of the quadcopter's position, and the force is a function of the quadcopter's velocity.
+Each task is run with three different target distance conditions: one meter, two meters, and three meters from the starting location.
+
+A set of PID controllers are created as reference implementations to compare with the neural adaptive controller.
+The PID controller designs vary with respect to two parameters; the size of the integral gain and the error signal to use.
+The integral gain is chosen to be fast or slow, and the error signal either comes from the regular control transform or the adaptive transform.
+Each parameter combination is used to produce four PID controllers to test. 
+An ensemble of 3000 LIF neurons is used in the neural adaptive controller for these experiments.
+All controllers use the same set of PD gains for consistency.
 
 \subsection{Metrics}
 
@@ -458,37 +470,39 @@ The particular tolerance chosen for these experiments is maintaining an RMS erro
 Both metrics are recorded over a 30 second simulation time.
 A value of 30 is recorded in the time-to-target trials if the quadcopter never reaches its target within tolerance over that duration.
 
-\subsection{Benchmarks}
+\subsection{Results}
 
-In order to evaluate the effectiveness of the adaptive controller against more conventional controllers, a set of benchmark tasks is used.
-These tasks involve
+Results from the benchmark tasks are displayed in Figure \ref{fig:Benchmarks}.
+While the adaptive controller did not perform strictly the best in all categories, it had the best overall performance of any controller tested.
+
 
 \begin{figure}
 \centering
-%\includegraphics[width=0.4\textwidth]{./figures/BarTime.png}
+\includegraphics[width=0.5\textwidth]{./figures/BarICRARMS.png}
+\includegraphics[width=0.5\textwidth]{./figures/BarICRATime.png}
 \caption{Performance on Benchmark Tasks}
 \label{fig:Benchmarks}
 \captionsetup{singlelinecheck=off,font=footnotesize}
-\caption*{}
+\caption*{The performance of five different quadcopter controllers are compared across four benchmark tasks using two metrics. \textit{Neural Adaptive} is the adaptive controller introduced in this paper. \textit{PID SA} is a PID controller with a slow integral gain and uses the Adaptive Transform to calculate the integral. \textit{PID FA} is a PID controller with a fast integral gain and uses the Adaptive Transform to calculate the integral. \textit{PID SC} is a PID controller with a slow integral gain and uses the Control Transform to calculate the integral. \textit{PID FC} is a PID controller with a fast integral gain and uses the Control Transform to calculate the integral. }
 \end{figure}
 
 
 \subsection{Improvement over Time}
 
 The previous experiments only track performance for a single short run. 
-The neural adaptive controllers are able to learn how to move throughout their environment better over time.
-An example of this ability is shown in \ref{fig:loop_path}.
+The neural adaptive controller is able to learn how to move throughout its environment better over time.
+An example of this ability is shown in Figure \ref{fig:loop_path}.
 The quadcopter is commanded to move back and forth between two points on the x-y plane ([0,0] and [3,0]) with a 5 second delay between each new command.
 An external force is being applied to the quadcopter along the $y$ direction proportional to its $x$ direction velocity.
 This causes the path of the quadcopter to become curved rather than a straight line.
-Over time, the neural adaptive TMCA controller begins to compensate for this external force, and the path between the two points starts to converge towards a straight line.
+Over time, the neural adaptive controller begins to compensate for this external force, and the path between the two points starts to converge towards a straight line.
 The non-adaptive controllers show no such improvement over time.
 
 \begin{figure}
 \centering
-\includegraphics[width=0.32\textwidth]{./figures/LoopAdaptive.png}
-\includegraphics[width=0.32\textwidth]{./figures/LoopPD.png}
-\includegraphics[width=0.32\textwidth]{./figures/LoopPIDName.png}
+\includegraphics[width=0.15\textwidth]{./figures/LoopAdaptive.png}
+\includegraphics[width=0.15\textwidth]{./figures/LoopPD.png}
+\includegraphics[width=0.15\textwidth]{./figures/LoopPIDName.png}
 \caption{Path of Quadcopter between Two Points with External Forces} %mention something about how the experiment was done here? it was 100 seconds total with 5 seconds before the point switches
 \label{fig:loop_path}
 \captionsetup{singlelinecheck=off,font=footnotesize}
@@ -497,9 +511,14 @@ RMS values for the Neural Adaptive, PD, and PID controllers are 0.6729, 1.2827, 
 \end{figure}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\section{CONCLUSIONS}
+\section{Conclusion and Future Work}
 
 This paper presents an adaptive control system for a quadcopter using simulated biological neurons.
+The controller is able to learn nonlinear functions of state to produce an adaptive control signal capable of accounting for unmodelled system dynamics to bring the quadcopter to its target.
+Performance of the controller in a virtual environment is highly promising, warranting future work implementing the algorithm on physical hardware.
+The algorithms chosen have the capability to be run on neuromorphic harware, leveraging this massively parallel and low power computing paradigm.
+
+
 
 
 \addtolength{\textheight}{-12cm}   % This command serves to balance the column lengths
@@ -516,9 +535,9 @@ This paper presents an adaptive control system for a quadcopter using simulated 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 
-\section*{ACKNOWLEDGMENT}
+\section*{Acknowledgment}
 
-
+TODO: put any funding stuff here
 
 
 
