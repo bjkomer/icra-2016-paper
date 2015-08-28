@@ -30,12 +30,12 @@
 \usepackage[flushleft]{threeparttable}
 
 \title{\LARGE \bf
-Adaptive Quadcopter Control using Biologically Inspired Neural Networks
+Adaptive Quadcopter Control using Spiking Neural Networks
 }
 
 
-\author{Brent Komer$^{1}$% <-this % stops a space
-\thanks{$^{1}$Brent Komer is with the Computational Neuroscience Research Group, Department of Systems Design Engineering,
+\author{Brent Komer$^{1}$ and Chris Eliasmith$^{1}$% <-this % stops a space
+\thanks{$^{1}$Brent Komer and Chris Eliasmith are with the Center for Theoretical Neuroscience, Department of Systems Design Engineering,
         University of Waterloo, N2L 3G1, Canada
         {\tt\small bjkomer@uwaterloo.ca}}%
 }
@@ -53,12 +53,12 @@ Adaptive Quadcopter Control using Biologically Inspired Neural Networks
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \begin{abstract}
 
-This paper explores the application of a biologically inspired learning method to produce an adaptive controller for a quadcopter.
+This paper explores the application of a biologically inspired learning method for spiking neural networks to produce an adaptive controller for a quadcopter.
 Our approach works by first generating a PD control signal based on the error from the quadcopter to its target.
-State information is encoded into an ensemble of spiking Leaky Integrate-and-Fire neurons.
+State information is encoded into an ensemble of spiking neurons.
 The Prescribed Error Sensitivity learning rule is applied to this ensemble to produce an additional control signal to be summed with the PD signal.
 The resulting controller is able to learn non-linear functions of system state to account for unknown and changing dynamic properties of the quadcopter in its environment.
-The algorithms used are designed to be implementable on neuromorphic hardware.
+The algorithms used are designed to run efficiently on neuromorphic hardware.
 Experiments are performed in simulation to demonstrate the effectiveness of the controller.
 
 \end{abstract}
@@ -67,36 +67,20 @@ Experiments are performed in simulation to demonstrate the effectiveness of the 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{Introduction}
 
-%TODO maybe this should be trimmed a little, and focus more on the adaptive control side rather than motivation
+The human motor control system is able to effectively compensate for changes in forces, torques, and inertial effects on the body.
 
-Humans have an exceptional ability to be able to adapt to their surroundings.
-In particular the human motor control system is able to compensate for changes in forces, torques, and inertial effects on the body.
-For example, when picking up an object such as a hammer, the weight of the hammer will apply external forces to the hand.
-This will change the dynamic properties of the hand and arm movements, yet the human motor control system is able to easily compensate for these changes and accurately control movement with the object.
-Even if an object has never been encountered before, the human brain is able to calculate the correct changes in timing and muscle tensions in order to skilfully manipulate the object.
-The predictive capabilities of the brain, along with the plasticity of neural connections in the motor area help guide these sophisticated behaviours.
+This ability to adapt to new dynamic properties of a system is extremely useful in robotics.
+When the precise environment that the robot will operate in is not fully known, or if there are unmodelled dynamics in the robot itself, it is useful for a control system that the robot uses to be adaptable to those environments.
 
-This ability for quick and easy adaptation to new dynamic properties of a system would be extremely useful in robotics. 
-Applying similar methods of control that have been developed over millions of years of evolution in the brain to a robotic control system could result in major improvements. 
-This is especially useful now that the demands of many robotic systems are now more general purpose than they were in the past. 
-Robots started out mainly performing simple and repetitive tasks in stable environments, such as automation in manufacturing \cite{garcia2007evolution}. 
-Now they are being used increasingly in more complex situations requiring a diverse amount of control, such as search and rescue missions, performing medical procedures, and assisting the elderly \cite{garcia2007evolution, hockstein2007history, nourbakhsh2005human, lacey1998application}. 
-When the precise environment that the robot will operate in is not fully known, it is useful for any control system that the robot uses to be adaptable to those environments.
+Recently, hardware inspired by the brain is being designed to take advantage of low power computation that borrows techniques from neural computation. [[PUT IN REFERENCES HERE]] %TODO
+Such neuromorphic hardware is massively parallel and consumes much less power than traditional hardware.
+Computational power efficiency for these systems is currently about 4 orders of magnitude better than the power efficiency for standard hardware \cite{hasler2013finding}.
+The algorithms explored in this paper focus on being able to take advantage of such hardware.
 
-Another advantage the brain has when it comes to control, is that it uses very little power, about 20 Watts on average \cite{hart1975brain}.
-Hardware inspired by the brain is being designed to take advantage of this low power paradigm. 
-This style of hardware, known as neuromorphic hardware, is typically massively parallel and consumes much less power than traditional hardware.
-Computational power efficiency for biological systems is 8-9 orders of magnitude better than the power efficiency for digital computation \cite{hasler2013finding}.
-The algorithms explored in this paper focus on being biologically plausible in order to take advantage of such hardware.
-
-%TODO this paragraph sounds gross, and will need some work
-A Quadcopter is an excellent robotic platform on which to implement brain-like control algorithms.
-Quadcopters are widely available, cheap, and have many potential applications.
-The environment in which a quadcopter operates can vary dramatically, causing changes in the dynamic properties of the system (e.g. changing wind conditions, or picking up a load of unknown mass).
-An adaptive control system is well suited for accounting for these changes.
-Quadcopters also suffer from a relatively short battery life, which neuromorphic hardware could help with.
-While the majority of the power consumed by a quadcopter goes towards the rotors, some is still used by the on-board control system.
-As the sophistication of the control system increases, the computational demands will follow, leading to less overall flight time if the hardware used is not highly power efficient.
+Specifically we develop and test a spiking, adaptive controller for use on a quadcopter platform.
+The simulated environment in which the quadcopter operates varies dramatically, causing changes in the dynamic properties of the system (e.g. changing wind conditions, or picking up a load of unknown mass).
+In this paper, we describe the design of the controller, it's mapping to spiking neurons, and demonstrate it's performance compared to standard and non-spiking controllers across four tasks. %TODO maybe put more tasks in this paper
+We show [[main conclusion goes here]] %TODO
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{Background}
@@ -104,21 +88,15 @@ As the sophistication of the control system increases, the computational demands
 \subsection{Quadcopter Flight}
 %TODO should dynamics equations go here too? Even though they aren't necessary for the neural controller?
 
-The system state of a quadcopter is six dimensional: three for position ($x$, $y$, and $z$) and three for orientation (roll, pitch, and yaw). 
-There are four control inputs, which are typically taken to be the rotational velocity of each of the four rotors. 
-For a physical quadcopter, these inputs are the voltages applied to each of these rotors.
-A transformation in these voltages can be obtained using the physical rotor parameters to estimate the rotor velocity.
-For simplicity of the simulation, the velocity is used directly as the control input in this paper. 
+The system state of the quadcopter is six dimensional: three for position ($x$, $y$, and $z$) and three for orientation (roll, pitch, and yaw). 
+There are four control inputs, which are typically taken to be the rotational velocity of each of the four rotors. For simplicity of the physical simulation, the velocity is used directly as the control input in this paper. 
 
-The rotors will always generate a thrust that is perpendicular to the body of the aircraft. 
+The rotors always generate a thrust that is perpendicular to the body of the aircraft. 
 In addition to this thrust, torque is generated by each rotor based on their spin direction  as well as their distance from the center of the body.
-For the quadcopter to be able to control its orientation, half of the rotors spin clockwise and the other half spin counter-clockwise. 
-The pairs diagonally opposite each other across the body spin in the same direction, allowing the torques to balance one another out and the quadcopter to maintain a steady orientation. 
-By varying the relative speeds of each rotor, the quadcopter is able to create a net torque in a specific direction, causing a rotation about any axis.
 
-A quadcopter performs four common actions to move around in its environment, with a distinct pattern of rotor actuation for each one: 
+In general, a quadcopter uses these forces to perform four common actions to move around in its environment, with a distinct pattern of rotor actuation for each one: 
 tilt forward/backward, tilt left/right, rotate, and move up/down. 
-A quadcopter can perform any combination of these actions, and with different magnitudes of each. The relative rotor speeds required for each are shown in Figure \ref{fig:actions}. This set of actions make up what is referred to as the `task space' of the quadcopter in the remainder of this paper.
+A quadcopter can perform any combination of these actions, and with different magnitudes of each. The relative rotor speeds required for each are shown in Figure \ref{fig:actions}. This set of actions make up the `task space' of the quadcopter.
 
 \begin{figure}
 \centering
@@ -164,93 +142,79 @@ $\tau$ is the input required to keep the system in a steady state.
 Often the system parameters are not fully known and an estimate needs to be used instead.
 Many control applications also require the system to be able to transition to different states, rather than remain at a particular state.
 The adaptive control law in \eqref{eq:Y_and_control_law} uses an estimate of the parameter vector, $\hat{\theta}$, along with a standard control law to compute the desired input to the system. Here $e$ is the state error and $K$ is a gain matrix.
-More detail on this style of adaptive control law can be found in \cite{slotine1987adaptive, slotine1991applied, cheah2006adaptive}.
+More detail on this style of adaptive control law can be found in \cite{slotine1987adaptive}, \cite{slotine1991applied}, and \cite{cheah2006adaptive}.
 %TODO EDIT1 add references to Slotine papers as well as a couple quick comments about the strengths of those controllers (guaranteed to converge with sufficient exploration of space, etc)
 
 \begin{equation} \label{eq:Y_and_control_law}
 \tau = Y(q,\dot{q})\hat{\theta} + Ke
 \end{equation}
 
-The parameter estimates can be initialized to any stable value and are updated according to the relationship in \eqref{eq:Y_update_equation}.
+The parameter estimates are initialized to any stable value and are updated according to the relationship in \eqref{eq:Y_update_equation}.
 $L$ is a learning rate parameter that determines how quickly the parameter estimates change over time in proportion to the measured error.
 The parameter estimates will eventually converge on values that allow the system to be controlled with minimal error.
-Given sufficient exploration of the state space, the parameter estimates are guaranteed to converge to the real values if the real values are required for optimal control \cite{slotine1987adaptive}.
+Given sufficient exploration of the state space, the parameter estimates are guaranteed to converge to the ideal values if the ideal values are required for optimal control \cite{slotine1987adaptive}.
 
 \begin{equation} \label{eq:Y_update_equation}
 \dot{\hat{\theta}} = LY(q,\dot{q})^{T}Ke
 \end{equation}
 
 
-Creating a mathematical model of a system with enough detail to account for everything is difficult. 
-Assumptions and approximations must be made if the model is to be tractable. 
-Moreover, external forces from the environment may influence the model, and their form may be unknown as the environment can be largely unknown. 
+Defining the necessary mathematical model of the system with sufficient detail is difficult. 
+Assumptions and approximations must often be made if the model is to be tractable. 
+Moreover, external forces from the environment may influence the model, and their form may be unknown as the environment is often largely unknown. 
 One way to overcome this problem is to use a set of basis functions as the model, and the weights applied to each element of the basis as the constant parameters. 
 If the basis is designed such that it can represent any computable function to a reasonable degree of accuracy, it will be effective in the adaptive control problem. 
 Gaussian basis functions are commonly used in adaptive control \cite{sanner1992gaussian}, but neural networks may be used as well \cite{barto1983neuronlike}.
-This paper explores the application of this form of control law using basis functions that are biologically plausible spiking neurons.
+This paper employs biologically plausible spiking neurons as basis functions in this form of control law.
 
 \subsection{Neural Simulation}
 
-The Neural Engineering Framework (NEF)\cite{eliasmith2004neural} provides a means of representing arbitrary vectors using the properties of neurons as a basis.
+The first principle Neural Engineering Framework (NEF)\cite{eliasmith2004neural} provides a means of representing vectors using the properties of neurons as a basis.
 This is done through a nonlinear encoding mechanism carried out by the tuning curves of the neurons, and a weighted linear decoding of the responses of the neurons to retrieve an approximation of the vector being encoded.
-A transformation can be applied to the underlying representation by specifying different weights on the linear decoding.
-Any computable function can be approximated through a transform, and the degree of accuracy of the decoding is dependent on the number of neurons used and the complexity of the function.
-%TODO put some simple example here about x and x**2?
-%TODO talk about dynamics here, might need to fix wording, and talk about recurrent connections?
-The neurons themselves are a part of a dynamical system where timing effects and filters across connections play a role in the behaviour of the system. 
+The second NEF principle is that a transformation can be applied to the underlying representation by specifying different weights on the linear decoding.
+Any computable function can be approximated through such a transform, and the degree of accuracy of the decoding is dependent on the number of neurons used and the complexity of the function.
+The third principle combines the first two to allow the implementation of linear and nonlinear dynamical systems specified in the vector space to be simulated directly in spiking neurons.
+Consequently, the neurons themselves are a part of a dynamical system where timing effects and filters across connections play a role in the behaviour of the system. 
+[[PUT IN EQUATION FOR SECOND AND THIRD PRINCIPLES]] %TODO
 %It also specifies a means of performing transformation
-For more detail on the NEF, see \cite{eliasmith2007build, stewart2011neural, eliasmith2013build}. % put this line in if you think the reader might want more details.
+For more detail on the NEF, see \cite{eliasmith2004neural}.%, stewart2011neural, eliasmith2013build}. % put this line in if you think the reader might want more details.
 
-Simulation of biological neurons is carried out by the software package Nengo \cite{bekolay2013nengo}.
-This software implements the algorithms in the NEF and provides an easy to use Python interface for building complex models under this framework.
+The software package Nengo \cite{bekolay2013nengo} implements the principles of the NEF and provides an easy to use Python interface for building complex models.
 The core components of Nengo are networks, nodes, ensembles, and connections.
-A network is a container for all of the components, it can contain any number of nodes, ensembles, connections, and even other networks.
-There is always one base network from which the rest of the model is built.
-Ensembles are groups of neurons representing a single vector. 
-The dimensionality of this vector can be any positive integer.
-Nodes are used when a particular part of the network is doing a computation without using neurons as the underlying representation.
-Typically nodes are used as the inputs and outputs to a neural system.
-Connections specify transformations between representational components (ensembles and nodes) through one-way links where the information flows from the output of the first representational component (origin) to the input of the second representational component (termination).
-Connections may have a synapse model applied to them, where the information from one end of the connection is delayed by a time-step before reaching the other end and a filter with a particular time constant may be applied.
-If no synaptic filter is applied, the value from the origin of the connection is sent directly to the termination of the connection during the same time step.
+Ensembles are groups of neurons, connections link ensembles or nodes, nodes provide arbitrary input or output to/from the model, and networks are containers for any of the components, to help conceptually organize the network.
 
-Nengo supports a variety of underlying neuron models for its ensembles.
+Nengo supports a variety of underlying neuron models in its ensembles.
 The most commonly used is the Leaky Integrate-and-Fire (LIF) neuron \cite{burkitt2006review}.
-%[add a brief description?]. %TODO add this description
-Ensembles can also be run in direct mode, in which functions are computed explicitly rather than with neurons.
-However, models in this mode are not implementable directly on neuromorphic hardware, and the behaviour of the system can be significantly different.
-Nevertheless, it can be useful for constructing working prototypes in simulation before converting the entire system to an underlying neural model. %TODO: this sounds gross, fix it... %TODO EDIT1
 
-Once the network structure has been specified, Nengo can build and run a simulation of this network for either a specified duration of time, or until a stop signal is generated. 
-All timing is measured as `simulated time' with a specific time-step. 
-If the time-step is short, the simulation can capture minute timing details more accurately, but the system as a whole will run slower with respect to real-time. A default time step of 1ms is typically used in Nengo models, which provides a reasonable trade-off between accuracy and run-time.
-%TODO is there any justification for this?
+Once a high-level network structure has been specified that implements a specific dynamical system, Nengo can build and run a simulation of this network for either a specified duration of time, or until a stop signal is generated. 
+A default time step of 1ms is typically used in Nengo models, which provides a reasonable trade-off between accuracy and run-time.
 
 \subsection{Adaptive Control with Nengo}
 
-We use the adaptive control methods described above to build a quadcopter controller using Nengo. 
-An ensemble of simulated neurons is used as the set of basis functions for the physical model, and the decoders of these neurons are used as the vector of unknown constant parameters. 
-A biologically plausible learning rule known as the Prescribed Error Sensitivity (PES) rule is used to update the decoder values \cite{bekolay2013simultaneous}. 
+We use the adaptive control methods described above to build a quadcopter controller using Nengo.
+Initially, the three principles are used to embed a standard PD controller into spiking neurons.
+Then, an ensemble of simulated neurons is used as a set of basis functions for the physical model, and the decoders of these neurons are used as the vector of unknown constant parameters.
+%TODO nengo screen capture of whole model?
+A biologically plausible learning rule able to learn NEF networks known as the Prescribed Error Sensitivity (PES) rule is used to update the decoder values \cite{bekolay2013simultaneous}. 
 
-This learning method works by first creating a connection from an ensemble of spiking neurons representing the state of the system to an ensemble or node representing the output of the controller. 
-This is known as the `learned connection' and can be initially set to perform any transformation, but is typically initialized for the output to be random or zero. 
-If the designer has an approximation of what the final learned transformation should look like, they can set this as the initial transformation. 
-Doing so will allow the system to converge to the final transformation more quickly.
+To exploit PES, we first create a connection from an ensemble of spiking neurons representing the state of the system to an ensemble or node representing the output of the controller. 
+This is known as the `learned connection' and can be initially set to perform any transformation, but is typically initialized for the output to be random or zero.
 
-The learned connection will be modulated by an error signal, which can come from anywhere in the network. 
-The PES learning rule will attempt to reduce the error signal by changing the value of the decoders on the learned connection. 
+The learned connection is modulated by an error signal, which in this case is the difference between the current state and the target state of the quadcopter.
+The PES learning rule reduces the error signal by changing the value of the decoders on the learned connection. 
 The direction in which the decoder values change is dependent on the sign of the error. 
 The magnitude of the change in decoder values at each time step is dependent on both the magnitude of the error and a learning-rate parameter. 
 The learning rate is a dimensionless parameter that needs to be tuned for the specific application. 
-It is dependent on the simulation time step, the number of neurons in the state ensemble, as well as how responsive the model needs to be to changes. 
-A larger learning rate will cause larger reactions to error, effectively making the system trust its current measurements more than historical ones. 
-A smaller time-step means that these changes will occur more frequently, so the net change over time will be greater. 
-A larger number of neurons means that the changes will be greater, as there will be more decoders changing. The overall transformation is a sum of these decoders. 
+[[WRITE THE RULE AS AN EQUATION]] %TODO
+%It is dependent on the simulation time step, the number of neurons in the state ensemble, as well as how responsive the model needs to be to changes. 
+%A larger learning rate will cause larger reactions to error, effectively making the system trust its current measurements more than historical ones. 
+%A smaller time-step means that these changes will occur more frequently, so the net change over time will be greater. 
+A larger number of neurons means that the changes will be greater, as there will be more decoders changing. The overall transformation is a weighted sum of these decoders and the neuron tuning curves. 
 
 \subsection{Simulation}
 
 The Virtual Robotics Experimentation Platform (V-REP) \cite{vrep} is used to validate and test the quadcopter controller.
-This software package contains models of various robotic platforms, including a model of a quadcopter; and allows the construction of intricate 3D virtual environments for the quadcopter to interact with.
+This software package includes a model of a quadcopter, and allows the construction of intricate 3D virtual environments for the quadcopter to interact with.
 External forces can be applied to the quadcopter from within this environment.
 %This simulation environment allows
 %Within this environment
@@ -269,7 +233,7 @@ Screen capture of an example environment in V-REP. The coloured areas with arrow
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{Controller Design}
 
-The goal of the controller is to actuate the quadcopter in such a way that it travels to a desired position in a reasonable amount of time. 
+The goal of the controller is to actuate the quadcopter in such a way that it travels to a desired position in a straight line. 
 This position is specified as a set of $x$, $y$, and $z$ coordinates and a particular yaw direction. 
 The controller is given the state error of the quadcopter and its target, as well as the current linear and angular velocities of the quadcopter. 
 It needs to use this information to generate a suitable control signal.
@@ -317,18 +281,13 @@ T_{R} =
 \begin{equation} \label{eq:control_equation}
 u = T_{R}(K_{p}e + K_{d}\dot{e})
 \end{equation}
-%TODO make this equation look prettier on paper. There also might need to be tildes and things on the variables to show that they are state error.
 
 Translation in the $x$ and $y$ directions is dependent on the states of both $x$ and $y$ as well as roll and pitch, because a roll in the quadcopter causes a component of thrust to be applied in the $y$ direction, and a pitch causes a component of thrust to be applied in the $x$ direction.
 A delicate balance needs to be found between each of the gains in order to create a stable, functioning controller. 
 The setpoint for each of the velocities as well as for roll and pitch is zero.
 
-%[gain matrix figures]
+The state error is measured relative to the body frame because most sensors on a real quadcopter would return measurements relative to the sensor device itself, which is located on the quadcopter. Using localized sensors, the state of the quadcopter can be defined relative to its target, making the state in the same coordinates as the error.
 
-%[talk about egocentric state as the error]
-The state error is measured relative to the body frame because most sensors on a real quadcopter would return measurements relative to the sensor device itself, which is located on the quadcopter. Absolute measurements could still be obtained with a GPS device, but would typically be much less accurate and such devices are harder to use for fine-tuned control. Using localized sensors, the state of the quadcopter can be defined relative to its target, making the state in the same coordinates as the error.
-
-%[talk about building the model in Nengo]
 Here the controller is implemented with a Nengo network, in which a 12-dimensional ensemble representing the state error can be projected to a 4-dimensional ensemble representing the desired control command. 
 The transformation done through this projection will be by the 12x4 PD gain matrix of the controller resulting from the concatenation of \eqref{eq:gain_matrix_p} and \eqref{eq:gain_matrix_d}. 
 This 4-dimensional ensemble is then projected to another 4-dimensional ensemble which represents the four desired angular velocities of the quadcopter's rotors. 
@@ -346,17 +305,11 @@ The network can be simplified further by multiplying the gain matrix with the ro
 
 \subsection{Adaptive Signal}
 
-%TODO explain modulatory connection somewhere
-To allow the system to adapt to unmodelled and changing dynamics, an ensemble of Leaky Integrate-and-Fire (LIF) neurons representing the quadcopter state is used.
-A transformation from this ensemble to the task-space ensemble provides the adaptive control signal.
-This transformation is initialized to be zero and is modified over time using the PES learning rule.
-The PES rule seeks to build a transformation that minimizes a particular error signal.
+To allow the system to adapt to unmodelled and changing dynamics, an ensemble of LIF neurons representing the quadcopter state is used as described in section D.
 In this case the error signal is the state error undergoing a control transform.
-This control transform is often set to be the same transform that the underlying PD controller uses, but this turns out to be not ideal for a quadcopter in all scenarios.
+This control transform is typically set to be the same transform that the underlying PD controller uses, but this turns out to be not ideal for a quadcopter in all scenarios.
 
-Under normal conditions when the only external force on the quadcopter is due to gravity, using the PD control signal as the error that modulates the PES learning works fine.
-This is because this modulatory signal can be brought to zero when the quadcopter is at its target, due to its stable state having roll and pitch angles of zero.
-If there is an external force in the horizontal direction (such as wind) the quadcopter needs to maintain a non-zero pitch and/or roll in order to remain stationary.
+Under normal conditions the only external force on the quadcopter is due to gravity, however, if there is an external force in the horizontal direction (such as wind) the quadcopter needs to maintain a non-zero pitch and/or roll in order to remain stationary.
 Being in this state produces a non-zero PD control signal, causing the quadcopter to move away from its target until it reaches a location where the PD control signal is zero.
 For each possible pair of stable roll and pitch angles there exists a pair of $x$ and $y$ displacements from the target that result in a PD control signal of zero.
 These points correspond to locations in the null space of the PD gain matrix.
@@ -372,7 +325,7 @@ A simple example of this effect is shown in Figure \ref{fig:zeroError}.
 Since the PES rule is receiving no error signal in these states, no change is made to the adaptive transformation and correction for the wind cannot occur.
 To solve this problem a different signal is given to the PES rule, one that is in the same form as the PD control signal except the gains used are different.
 The most important difference is that the gains on the roll and pitch are set to zero, effectively ignoring these state variables.
-This makes sense intuitively because what is actually desired to be controlled is only the $x$, $y$, and $z$ location and the yaw angle.
+This is appropriate because we want to control only the $x$, $y$, and $z$ location and the yaw angle.
 In terms of producing an error reflecting this goal, roll and pitch should be left out of the equation.
 Doing so allows only one stable point in the state space to produce an error of zero, coinciding with the target state.
 The PES rule will drive the system to this state in the presence of unknown external forces.
@@ -380,7 +333,7 @@ The PES rule will drive the system to this state in the presence of unknown exte
 
 Another issue arises when this system is run as a point-to-point controller.
 Whenever the target is moved to a new location, an error will be produced, which in turn causes the transformation from the ensemble of LIF neurons to change.
-Assuming the neurons are already computing the correct adaptive control signal for the dynamics of the system, simply moving the target will cause them to now compute a sub-optimal signal.
+Assuming the neurons are already computing the correct adaptive control signal for the dynamics of the system, moving the target will cause them to now compute a sub-optimal signal.
 To overcome this issue, the controller needs a way to distinguish between errors caused by the target moving and errors caused by a change in system dynamics.
 A simple and effective solution is to inhibit learning when the target has moved recently.
 This is accomplished by applying a low-pass filter to the signal representing the target location and then taking the difference between the target location and the low-pass filtered target location.
@@ -421,7 +374,7 @@ The network diagram of the final design of the adaptive controller is shown in F
 \caption{Controller Improvements}
 \label{fig:ImprovementComparison}
 \captionsetup{singlelinecheck=off,font=footnotesize}
-\caption*{The quadcopter is initially hovering at the $x$-$y$ location [0,0] and is commanded to move to [0,1]. After travelling 0.75 meters, the quadcopter enters a region which applies an external force in the positive $x$ direction. The controller needs to compensate for this unmodelled disturbance to reach the target. (a) The error signal given to the PES rule is the same as the PD control signal. (b) The error signal given to the PES rule comes from a gain matrix that masks out roll and pitch information. (c) The error signal to the PES rule does not contain roll or pitch information and is also inhibited by recent target movement.}
+\caption*{The quadcopter is initially hovering at the $x$-$y$ location [0,0] and is commanded to move to [0,1]. After travelling 0.75 meters, the quadcopter enters a region which applies an external force in the positive $x$ direction. The controller needs to compensate for this unmodelled disturbance to reach the target. (a) The error signal given to the PES rule is the same as the PD control signal. (b) The error signal given to the PES rule comes from a gain matrix that masks out roll and pitch information. (c) The error signal to the PES rule does not contain roll or pitch information and is also inhibited by recent target movement. The latter generates the shortest path and reaches the target soonest.}
 \end{figure}
 
 \begin{figure}
@@ -435,9 +388,9 @@ The network diagram of the final design of the adaptive controller is shown in F
 
 \subsection{Gain Tuning}
 
-The adaptive control system contains twelve different gains that need to be tuned.
+The adaptive control system in Figure \ref{fig:NetFinal} contains twelve different gains that need to be tuned.
 Eight of these are for the PD gain matrix, and four are for the gain matrix of the PES rule error signal.
-Due to the difficulty in tuning these gains manually, the automated parameter optimization software Hyperopt \cite{bergstra2015hyperopt} is used to tune all twelve gains simultaneously.
+Due to the difficulty in tuning these gains manually, the automated parameter optimization software Hyperopt \cite{bergstra2015hyperopt} was used to tune all twelve gains simultaneously.
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -475,7 +428,10 @@ A value of 30 is recorded in the time-to-target trials if the quadcopter never r
 \subsection{Results}
 
 Results from the benchmark tasks are displayed in Figure \ref{fig:Benchmarks}.
-While the adaptive controller did not perform strictly the best in all categories, it was the most consistent and had the best overall performance of any controller tested.
+The adaptive controller performed as well or better than all other controllers across the tasks and metrics.
+Consequently it demonstrates the overall best performance.
+[[PUT IN RANKING CHART/OVERALL RMS/TIME TABLE HERE, QUOTE THIS IN ABSTRACT]]
+%TODO (Stick your 'overall' performance metric in here, describe it and then report the number... that can also go in the abstract, as it is a quantitative claim about the quality of the controller compared to the others :) )
 
 
 \begin{figure}
@@ -485,7 +441,7 @@ While the adaptive controller did not perform strictly the best in all categorie
 \caption{Performance on Benchmark Tasks}
 \label{fig:Benchmarks}
 \captionsetup{singlelinecheck=off,font=footnotesize}
-\caption*{The performance of five different quadcopter controllers are compared across four benchmark tasks using two metrics. \textit{Neural Adaptive} is the adaptive controller introduced in this paper. \textit{PID SA} is a PID controller with a slow integral gain and uses the Adaptive Transform to calculate the integral. \textit{PID FA} is a PID controller with a fast integral gain and uses the Adaptive Transform to calculate the integral. \textit{PID SC} is a PID controller with a slow integral gain and uses the Control Transform to calculate the integral. \textit{PID FC} is a PID controller with a fast integral gain and uses the Control Transform to calculate the integral. }
+\caption*{The performance of five different quadcopter controllers are compared across four benchmark tasks using two metrics. \textit{Neural Adaptive} is the adaptive controller introduced in this paper. \textit{PID SA} is a PID controller with a slow integral gain and uses the Adaptive Transform to calculate the integral. \textit{PID FA} is a PID controller with a fast integral gain and uses the Adaptive Transform to calculate the integral. \textit{PID SC} is a PID controller with a slow integral gain and uses the Control Transform to calculate the integral. \textit{PID FC} is a PID controller with a fast integral gain and uses the Control Transform to calculate the integral. The neural adaptive controller equals or betters all other controllers across all tasks and metrics.}
 \end{figure}
 
 
@@ -499,6 +455,7 @@ An external force is being applied to the quadcopter along the $y$ direction pro
 This causes the path of the quadcopter to become curved rather than a straight line.
 Over time, the neural adaptive controller begins to compensate for this external force, and the path between the two points starts to converge towards a straight line.
 The non-adaptive controllers show no such improvement over time.
+Consequently, there are classes of control problems that the adaptive neural controller can solve that can not be addressed by standard controllers.
 
 \begin{figure}
 \centering
@@ -515,9 +472,9 @@ RMS values for the Neural Adaptive, PD, and PID controllers are 0.6729, 1.2827, 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{Conclusion and Future Work}
 
-This paper presents an adaptive control system for a quadcopter using simulated biological neurons.
+This paper presents an adaptive control system for a quadcopter using simulated spiking neurons.
 The controller is able to learn nonlinear functions of state to produce an adaptive control signal capable of accounting for unmodelled system dynamics to bring the quadcopter to its target.
-Performance of the controller in a virtual environment is highly promising, warranting future work implementing the algorithm on physical hardware.
+Performance of the controller in a virtual environment is better than standard control benchmarks, warranting future work implementing the algorithm on physical hardware.
 The algorithms chosen have the capability to be run on neuromorphic harware, leveraging this massively parallel and low power computing paradigm.
 
 
@@ -547,7 +504,7 @@ TODO: put any funding stuff here
 
 \bibliographystyle{IEEEtran}
 \bibliography{IEEEabrv,root}
-\nocite{*}
+%\nocite{*}
 %TODO clean up the reference style to look good in IEEE format
 %TODO reference thesis
 
