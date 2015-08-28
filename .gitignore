@@ -36,6 +36,7 @@
 # Images
 
 *.png
+*.jpg
 
 # Ignore reference templates
 
