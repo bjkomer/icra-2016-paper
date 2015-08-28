@@ -28,6 +28,8 @@
 \usepackage{gensymb}
 % Allow descriptions under tables
 \usepackage[flushleft]{threeparttable}
+% Allow math symbols to be bolded
+\usepackage{bm}
 
 \title{\LARGE \bf
 Adaptive Quadcopter Control using Spiking Neural Networks
@@ -54,6 +56,7 @@ Adaptive Quadcopter Control using Spiking Neural Networks
 \begin{abstract}
 
 This paper explores the application of a biologically inspired learning method for spiking neural networks to produce an adaptive controller for a quadcopter.
+%TODO talk more about motivation and results here, make sentences 2-4 less disconnected
 Our approach works by first generating a PD control signal based on the error from the quadcopter to its target.
 State information is encoded into an ensemble of spiking neurons.
 The Prescribed Error Sensitivity learning rule is applied to this ensemble to produce an additional control signal to be summed with the PD signal.
@@ -72,7 +75,7 @@ The human motor control system is able to effectively compensate for changes in 
 This ability to adapt to new dynamic properties of a system is extremely useful in robotics.
 When the precise environment that the robot will operate in is not fully known, or if there are unmodelled dynamics in the robot itself, it is useful for a control system that the robot uses to be adaptable to those environments.
 
-Recently, hardware inspired by the brain is being designed to take advantage of low power computation that borrows techniques from neural computation. [[PUT IN REFERENCES HERE]] %TODO
+Recently, hardware inspired by the brain is being designed to take advantage of low power computation that borrows techniques from neural computation \cite{hasler2013finding, khan2008spinnaker, boahen2006neurogrid}. %[[PUT IN REFERENCES HERE]] %TODO mostly done now
 Such neuromorphic hardware is massively parallel and consumes much less power than traditional hardware.
 Computational power efficiency for these systems is currently about 4 orders of magnitude better than the power efficiency for standard hardware \cite{hasler2013finding}.
 The algorithms explored in this paper focus on being able to take advantage of such hardware.
@@ -80,13 +83,12 @@ The algorithms explored in this paper focus on being able to take advantage of s
 Specifically we develop and test a spiking, adaptive controller for use on a quadcopter platform.
 The simulated environment in which the quadcopter operates varies dramatically, causing changes in the dynamic properties of the system (e.g. changing wind conditions, or picking up a load of unknown mass).
 In this paper, we describe the design of the controller, it's mapping to spiking neurons, and demonstrate it's performance compared to standard and non-spiking controllers across four tasks. %TODO maybe put more tasks in this paper
-We show [[main conclusion goes here]] %TODO
+We show that this adaptive controller has the best performance of those tested. %TODO talk about learning over time as well?
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{Background}
 
 \subsection{Quadcopter Flight}
-%TODO should dynamics equations go here too? Even though they aren't necessary for the neural controller?
 
 The system state of the quadcopter is six dimensional: three for position ($x$, $y$, and $z$) and three for orientation (roll, pitch, and yaw). 
 There are four control inputs, which are typically taken to be the rotational velocity of each of the four rotors. For simplicity of the physical simulation, the velocity is used directly as the control input in this paper. 
@@ -101,7 +103,7 @@ A quadcopter can perform any combination of these actions, and with different ma
 \begin{figure}
 \centering
 \includegraphics[width=0.4\textwidth]{./figures/QuadcopterMovements.JPG}
-\caption{Four Primary Quadcopter Movements. Taken from \cite{harsha}}
+\caption{Four Primary Quadcopter Movements. \cite{harsha}}
 \label{fig:actions}
 \end{figure}
 
@@ -119,8 +121,6 @@ This model is typically of the form shown in \eqref{eq:physical_equation}, where
 M(q)\ddot{q} + C(q,\dot{q})\dot{q} + g(q) = \tau
 \end{equation}
 
-%TODO
-%[[[[[a lot more stuff to go here, need to understand it more first]]]]]
 The goal of the controller is to bring the system to a particular target state.
 Typically the state as well as its derivative is desired to be controlled.
 Thus, the second derivative of the state will be zero when the system has arrived at the target state.
@@ -143,7 +143,6 @@ Often the system parameters are not fully known and an estimate needs to be used
 Many control applications also require the system to be able to transition to different states, rather than remain at a particular state.
 The adaptive control law in \eqref{eq:Y_and_control_law} uses an estimate of the parameter vector, $\hat{\theta}$, along with a standard control law to compute the desired input to the system. Here $e$ is the state error and $K$ is a gain matrix.
 More detail on this style of adaptive control law can be found in \cite{slotine1987adaptive}, \cite{slotine1991applied}, and \cite{cheah2006adaptive}.
-%TODO EDIT1 add references to Slotine papers as well as a couple quick comments about the strengths of those controllers (guaranteed to converge with sufficient exploration of space, etc)
 
 \begin{equation} \label{eq:Y_and_control_law}
 \tau = Y(q,\dot{q})\hat{\theta} + Ke
@@ -157,7 +156,6 @@ Given sufficient exploration of the state space, the parameter estimates are gua
 \begin{equation} \label{eq:Y_update_equation}
 \dot{\hat{\theta}} = LY(q,\dot{q})^{T}Ke
 \end{equation}
-
 
 Defining the necessary mathematical model of the system with sufficient detail is difficult. 
 Assumptions and approximations must often be made if the model is to be tractable. 
@@ -175,7 +173,7 @@ The second NEF principle is that a transformation can be applied to the underlyi
 Any computable function can be approximated through such a transform, and the degree of accuracy of the decoding is dependent on the number of neurons used and the complexity of the function.
 The third principle combines the first two to allow the implementation of linear and nonlinear dynamical systems specified in the vector space to be simulated directly in spiking neurons.
 Consequently, the neurons themselves are a part of a dynamical system where timing effects and filters across connections play a role in the behaviour of the system. 
-[[PUT IN EQUATION FOR SECOND AND THIRD PRINCIPLES]] %TODO
+[[PUT IN EQUATION FOR SECOND AND THIRD PRINCIPLES]] %TODO Maybe put an equation for the 2nd and third principles to show how neurons relate to vector spaces in a dynamical system?
 %It also specifies a means of performing transformation
 For more detail on the NEF, see \cite{eliasmith2004neural}.%, stewart2011neural, eliasmith2013build}. % put this line in if you think the reader might want more details.
 
@@ -201,11 +199,15 @@ To exploit PES, we first create a connection from an ensemble of spiking neurons
 This is known as the `learned connection' and can be initially set to perform any transformation, but is typically initialized for the output to be random or zero.
 
 The learned connection is modulated by an error signal, which in this case is the difference between the current state and the target state of the quadcopter.
-The PES learning rule reduces the error signal by changing the value of the decoders on the learned connection. 
+The PES learning rule \eqref{eq:PES} reduces the error signal $\bm{E}$ by changing the value of the decoders $\bm{d_{i}}$ on the learned connection. 
 The direction in which the decoder values change is dependent on the sign of the error. 
-The magnitude of the change in decoder values at each time step is dependent on both the magnitude of the error and a learning-rate parameter. 
+The magnitude of the change in decoder values for the $i$th neuron at each time step is dependent on both the magnitude of the error, a learning-rate parameter $\kappa$, and the activity of the neuron $a_{i}$. 
 The learning rate is a dimensionless parameter that needs to be tuned for the specific application. 
-[[WRITE THE RULE AS AN EQUATION]] %TODO
+
+\begin{equation} \label{eq:PES}
+\Delta \bm{d_{i}} = \kappa \bm{E} a_{i}
+\end{equation}
+
 %It is dependent on the simulation time step, the number of neurons in the state ensemble, as well as how responsive the model needs to be to changes. 
 %A larger learning rate will cause larger reactions to error, effectively making the system trust its current measurements more than historical ones. 
 %A smaller time-step means that these changes will occur more frequently, so the net change over time will be greater. 
@@ -299,7 +301,7 @@ The network can be simplified further by multiplying the gain matrix with the ro
 \begin{figure}
 \centering
 \includegraphics[width=0.4\textwidth]{./figures/QuadcopterNetworkSimpleLegend.pdf}
-\caption{Basic Quadcopter Controller Network}
+\caption{Basic Quadcopter Controller Network for PD Control}
 \label{fig:NetBasic}
 \end{figure}
 
@@ -329,7 +331,6 @@ This is appropriate because we want to control only the $x$, $y$, and $z$ locati
 In terms of producing an error reflecting this goal, roll and pitch should be left out of the equation.
 Doing so allows only one stable point in the state space to produce an error of zero, coinciding with the target state.
 The PES rule will drive the system to this state in the presence of unknown external forces.
-%TODO do I need a 'assuming this state is reachable / the forces are not too strong clause here? or should that be assumed?
 
 Another issue arises when this system is run as a point-to-point controller.
 Whenever the target is moved to a new location, an error will be produced, which in turn causes the transformation from the ensemble of LIF neurons to change.
@@ -462,7 +463,7 @@ Consequently, there are classes of control problems that the adaptive neural con
 \includegraphics[width=0.15\textwidth]{./figures/LoopAdaptive.png}
 \includegraphics[width=0.15\textwidth]{./figures/LoopPD.png}
 \includegraphics[width=0.15\textwidth]{./figures/LoopPIDName.png}
-\caption{Path of Quadcopter between Two Points with External Forces} %mention something about how the experiment was done here? it was 100 seconds total with 5 seconds before the point switches
+\caption{Path of Quadcopter between Two Points with External Forces}
 \label{fig:loop_path}
 \captionsetup{singlelinecheck=off,font=footnotesize}
 \caption*{
