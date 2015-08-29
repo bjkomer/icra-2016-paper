@@ -62,7 +62,9 @@ State information is encoded into an ensemble of spiking neurons.
 The Prescribed Error Sensitivity learning rule is applied to this ensemble to produce an additional control signal to be summed with the PD signal.
 The resulting controller is able to learn non-linear functions of system state to account for unknown and changing dynamic properties of the quadcopter in its environment.
 The algorithms used are designed to run efficiently on neuromorphic hardware.
-Experiments are performed in simulation to demonstrate the effectiveness of the controller.
+Experiments performed in simulation demonstrate the effectiveness of the controller.
+On average the adaptive controller reached its target 14\% faster and with 68\% less error than the best non-adaptive PID controller tested.
+
 
 \end{abstract}
 
@@ -169,11 +171,19 @@ This paper employs biologically plausible spiking neurons as basis functions in 
 
 The first principle Neural Engineering Framework (NEF)\cite{eliasmith2004neural} provides a means of representing vectors using the properties of neurons as a basis.
 This is done through a nonlinear encoding mechanism carried out by the tuning curves of the neurons, and a weighted linear decoding of the responses of the neurons to retrieve an approximation of the vector being encoded.
-The second NEF principle is that a transformation can be applied to the underlying representation by specifying different weights on the linear decoding.
+The second NEF principle is that a transformation can be applied to the underlying representation by specifying different weights on the linear decoding \eqref{eq:SecondPrinciple}. 
 Any computable function can be approximated through such a transform, and the degree of accuracy of the decoding is dependent on the number of neurons used and the complexity of the function.
 The third principle combines the first two to allow the implementation of linear and nonlinear dynamical systems specified in the vector space to be simulated directly in spiking neurons.
-Consequently, the neurons themselves are a part of a dynamical system where timing effects and filters across connections play a role in the behaviour of the system. 
-[[PUT IN EQUATION FOR SECOND AND THIRD PRINCIPLES]] %TODO Maybe put an equation for the 2nd and third principles to show how neurons relate to vector spaces in a dynamical system?
+Consequently, the neurons themselves are a part of a dynamical system where timing effects and filters across connections play a role in the behaviour of the system \eqref{eq:ThirdPrinciple}. 
+%[[PUT IN EQUATION FOR SECOND AND THIRD PRINCIPLES]] %TODO Maybe put an equation for the 2nd and third principles to show how neurons relate to vector spaces in a dynamical system?
+\begin{equation} \label{eq:SecondPrinciple}
+\hat{f}(x(t)) = \sum_{i} a_{i} (x(t)) \phi_{i}^{f}
+\end{equation}
+
+\begin{equation} \label{eq:ThirdPrinciple}
+\sum_{n} \delta (t - t_{in}) = G_{i} [ \alpha_{i} \langle \tilde{\phi_{i}} (h_{i} (t) * [ A^{\prime} x(t) + B^{\prime} u(t)]) \rangle_{m} + J_{i}^{bias}]
+\end{equation}
+
 %It also specifies a means of performing transformation
 For more detail on the NEF, see \cite{eliasmith2004neural}.%, stewart2011neural, eliasmith2013build}. % put this line in if you think the reader might want more details.
 
@@ -431,7 +441,10 @@ A value of 30 is recorded in the time-to-target trials if the quadcopter never r
 Results from the benchmark tasks are displayed in Figure \ref{fig:Benchmarks}.
 The adaptive controller performed as well or better than all other controllers across the tasks and metrics.
 Consequently it demonstrates the overall best performance.
-[[PUT IN RANKING CHART/OVERALL RMS/TIME TABLE HERE, QUOTE THIS IN ABSTRACT]]
+%[[PUT IN RANKING CHART/OVERALL RMS/TIME TABLE HERE, QUOTE THIS IN ABSTRACT]]
+The mean across all trials of each task is depicted in Figure \ref{fig:OverallPerformance}.
+The neural adaptive controller reached the target 14\% faster and with 68\% less error than the second best controller tested.
+
 %TODO (Stick your 'overall' performance metric in here, describe it and then report the number... that can also go in the abstract, as it is a quantitative claim about the quality of the controller compared to the others :) )
 
 
@@ -443,6 +456,16 @@ Consequently it demonstrates the overall best performance.
 \label{fig:Benchmarks}
 \captionsetup{singlelinecheck=off,font=footnotesize}
 \caption*{The performance of five different quadcopter controllers are compared across four benchmark tasks using two metrics. \textit{Neural Adaptive} is the adaptive controller introduced in this paper. \textit{PID SA} is a PID controller with a slow integral gain and uses the Adaptive Transform to calculate the integral. \textit{PID FA} is a PID controller with a fast integral gain and uses the Adaptive Transform to calculate the integral. \textit{PID SC} is a PID controller with a slow integral gain and uses the Control Transform to calculate the integral. \textit{PID FC} is a PID controller with a fast integral gain and uses the Control Transform to calculate the integral. The neural adaptive controller equals or betters all other controllers across all tasks and metrics.}
+\end{figure}
+
+\begin{figure}
+\centering
+\includegraphics[width=0.22\textwidth]{./figures/MeanRMS.png}
+\includegraphics[width=0.22\textwidth]{./figures/MeanTime.png}
+\caption{Overall Performance}
+\label{fig:OverallPerformance}
+\captionsetup{singlelinecheck=off,font=footnotesize}
+\caption*{}
 \end{figure}
 
 
