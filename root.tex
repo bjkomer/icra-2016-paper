@@ -63,7 +63,7 @@ The Prescribed Error Sensitivity learning rule is applied to this ensemble to pr
 The resulting controller is able to learn non-linear functions of system state to account for unknown and changing dynamic properties of the quadcopter in its environment.
 The algorithms used are designed to run efficiently on neuromorphic hardware.
 Experiments performed in simulation demonstrate the effectiveness of the controller.
-On average the adaptive controller reached its target 14\% faster and with 68\% less error than the best non-adaptive PID controller tested.
+On average the adaptive controller reached its target 15\% faster and with 69\% less error than the best non-adaptive PID controller tested.
 
 
 \end{abstract}
@@ -84,7 +84,7 @@ The algorithms explored in this paper focus on being able to take advantage of s
 
 Specifically we develop and test a spiking, adaptive controller for use on a quadcopter platform.
 The simulated environment in which the quadcopter operates varies dramatically, causing changes in the dynamic properties of the system (e.g. changing wind conditions, or picking up a load of unknown mass).
-In this paper, we describe the design of the controller, it's mapping to spiking neurons, and demonstrate it's performance compared to standard and non-spiking controllers across four tasks. %TODO maybe put more tasks in this paper
+In this paper, we describe the design of the controller, it's mapping to spiking neurons, and demonstrate it's performance compared to standard and non-spiking controllers across five tasks. %TODO maybe put more tasks in this paper
 We show that this adaptive controller has the best performance of those tested. %TODO talk about learning over time as well?
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -310,7 +310,7 @@ The network can be simplified further by multiplying the gain matrix with the ro
 
 \begin{figure}
 \centering
-\includegraphics[width=0.4\textwidth]{./figures/QuadcopterNetworkSimpleLegend.pdf}
+\includegraphics[width=0.4\textwidth]{./figures/SimpleNetworkICRA.pdf}
 \caption{Basic Quadcopter Controller Network for PD Control}
 \label{fig:NetBasic}
 \end{figure}
@@ -390,7 +390,7 @@ The network diagram of the final design of the adaptive controller is shown in F
 
 \begin{figure}
 \centering
-\includegraphics[width=0.4\textwidth]{./figures/QuadcopterNetworkTMCSimplifiedICRALegend.pdf}
+\includegraphics[width=0.4\textwidth]{./figures/AdaptiveNetworkICRA.pdf}
 \caption{Adaptive Quadcopter Controller Network}
 \label{fig:NetFinal}
 \captionsetup{singlelinecheck=off,font=footnotesize}
@@ -410,7 +410,7 @@ Due to the difficulty in tuning these gains manually, the automated parameter op
 \subsection{Benchmarks}
 
 In order to evaluate the effectiveness of the adaptive controller against more conventional controllers, a set of benchmark tasks is used.
-The tasks chosen involve movement in the horizontal direction under the influence of four different external force conditions: no force, a constant force, the force is a function of the quadcopter's position, and the force is a function of the quadcopter's velocity.
+The tasks chosen involve movement in the horizontal direction under the influence of five different external force conditions: no force, a constant horizontal force, a horizontal force that is a function of the quadcopter's position, a horizontal force that is a function of the quadcopter's velocity, and a vertical force that is a function of the quadcopter's velocity.
 Each task is run with three different target distance conditions: one meter, two meters, and three meters from the starting location.
 
 A set of PID controllers are created as reference implementations to compare with the neural adaptive controller.
@@ -443,25 +443,25 @@ The adaptive controller performed as well or better than all other controllers a
 Consequently it demonstrates the overall best performance.
 %[[PUT IN RANKING CHART/OVERALL RMS/TIME TABLE HERE, QUOTE THIS IN ABSTRACT]]
 The mean across all trials of each task is depicted in Figure \ref{fig:OverallPerformance}.
-The neural adaptive controller reached the target 14\% faster and with 68\% less error than the second best controller tested.
+The neural adaptive controller reached the target 15\% faster and with 69\% less error than the second best controller tested.
 
 %TODO (Stick your 'overall' performance metric in here, describe it and then report the number... that can also go in the abstract, as it is a quantitative claim about the quality of the controller compared to the others :) )
 
 
 \begin{figure}
 \centering
-\includegraphics[width=0.5\textwidth]{./figures/BarICRARMSLabel.png}
-\includegraphics[width=0.5\textwidth]{./figures/BarICRATimeLabel.png}
+\includegraphics[width=0.5\textwidth]{./figures/BarIcraMedLimitRMSLabel.png}
+\includegraphics[width=0.5\textwidth]{./figures/BarIcraMedLimitTimeLabel.png}
 \caption{Performance on Benchmark Tasks}
 \label{fig:Benchmarks}
 \captionsetup{singlelinecheck=off,font=footnotesize}
-\caption*{The performance of five different quadcopter controllers are compared across four benchmark tasks using two metrics. \textit{Neural Adaptive} is the adaptive controller introduced in this paper. \textit{PID SA} is a PID controller with a slow integral gain and uses the Adaptive Transform to calculate the integral. \textit{PID FA} is a PID controller with a fast integral gain and uses the Adaptive Transform to calculate the integral. \textit{PID SC} is a PID controller with a slow integral gain and uses the Control Transform to calculate the integral. \textit{PID FC} is a PID controller with a fast integral gain and uses the Control Transform to calculate the integral. The neural adaptive controller equals or betters all other controllers across all tasks and metrics.}
+\caption*{The performance of five different quadcopter controllers are compared across five benchmark tasks using two metrics. \textit{Neural Adaptive} is the adaptive controller introduced in this paper. \textit{PID SA} is a PID controller with a slow integral gain and uses the Adaptive Transform to calculate the integral. \textit{PID FA} is a PID controller with a fast integral gain and uses the Adaptive Transform to calculate the integral. \textit{PID SC} is a PID controller with a slow integral gain and uses the Control Transform to calculate the integral. \textit{PID FC} is a PID controller with a fast integral gain and uses the Control Transform to calculate the integral. The neural adaptive controller equals or betters all other controllers across all tasks and metrics.}
 \end{figure}
 
 \begin{figure}
 \centering
-\includegraphics[width=0.22\textwidth]{./figures/MeanRMS.png}
-\includegraphics[width=0.22\textwidth]{./figures/MeanTime.png}
+\includegraphics[width=0.22\textwidth]{./figures/MeanRMSFinal.png}
+\includegraphics[width=0.22\textwidth]{./figures/MeanTimeFinal.png}
 \caption{Overall Performance}
 \label{fig:OverallPerformance}
 \captionsetup{singlelinecheck=off,font=footnotesize}
