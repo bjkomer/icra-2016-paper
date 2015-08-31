@@ -57,14 +57,13 @@ Adaptive Quadcopter Control using Spiking Neural Networks
 
 This paper explores the application of a biologically inspired learning method for spiking neural networks to produce an adaptive controller for a quadcopter.
 %TODO talk more about motivation and results here, make sentences 2-4 less disconnected
-Our approach works by first generating a PD control signal based on the error from the quadcopter to its target.
-State information is encoded into an ensemble of spiking neurons.
-The Prescribed Error Sensitivity learning rule is applied to this ensemble to produce an additional control signal to be summed with the PD signal.
-The resulting controller is able to learn non-linear functions of system state to account for unknown and changing dynamic properties of the quadcopter in its environment.
+%Our approach works by first generating a PD control signal based on the error from the quadcopter to its target.
+%State information is encoded into an ensemble of spiking neurons.
+%The Prescribed Error Sensitivity learning rule is applied to this ensemble to produce an additional control signal to be summed with the PD signal.
+This controller is able to learn non-linear functions of system state to account for unknown and changing dynamic properties of the quadcopter in its environment.
 The algorithms used are designed to run efficiently on neuromorphic hardware.
 Experiments performed in simulation demonstrate the effectiveness of the controller.
 On average the adaptive controller reached its target 15\% faster and with 69\% less error than the best non-adaptive PID controller tested.
-
 
 \end{abstract}
 
@@ -171,7 +170,7 @@ This paper employs biologically plausible spiking neurons as basis functions in 
 
 The first principle Neural Engineering Framework (NEF)\cite{eliasmith2004neural} provides a means of representing vectors using the properties of neurons as a basis.
 This is done through a nonlinear encoding mechanism carried out by the tuning curves of the neurons, and a weighted linear decoding of the responses of the neurons to retrieve an approximation of the vector being encoded.
-The second NEF principle is that a transformation can be applied to the underlying representation by specifying different weights on the linear decoding \eqref{eq:SecondPrinciple}.
+The second NEF principle is that a transformation can be applied to the underlying representation by specifying different weights on the linear decoding.% \eqref{eq:SecondPrinciple}.
 
 \begin{equation} \label{eq:SecondPrinciple}
 \hat{f}(x) = \sum_{i} a_{i} x d_{i}^{f}
@@ -180,7 +179,7 @@ The second NEF principle is that a transformation can be applied to the underlyi
 Where $a_{i}$ is the neural activity and $d_{i}^{f}$ are the optimal linear decoders for computing the function $f$.
 Any computable function can be approximated through such a transform, and the degree of accuracy of the decoding is dependent on the number of neurons used and the complexity of the function.
 The third principle combines the first two to allow the implementation of linear and nonlinear dynamical systems specified in the vector space to be simulated directly in spiking neurons.
-Consequently, the neurons themselves are a part of a dynamical system where timing effects and filters across connections play a role in the behaviour of the system \eqref{eq:ThirdPrinciple}. 
+Consequently, the neurons themselves are a part of a dynamical system where timing effects and filters across connections play a role in the behaviour of the system.% \eqref{eq:ThirdPrinciple}. 
 
 \begin{equation} \label{eq:ThirdPrinciple}
 a_i(t) = G_i [ \alpha_i \langle e_i ( h_i(t)  * f(x(t)) ) \rangle + J^{bias}_i ]
@@ -308,6 +307,7 @@ The network can be simplified further by multiplying the gain matrix with the ro
 \begin{figure}
 \centering
 \includegraphics[width=0.4\textwidth]{./figures/QuadcopterNetworkSimpleLegend.pdf}
+%\includegraphics[width=0.4\textwidth]{./figures/PDICRASmaller.pdf}
 \caption{Basic Quadcopter Controller Network for PD Control}
 \label{fig:NetBasic}
 \end{figure}
@@ -345,22 +345,23 @@ Assuming the neurons are already computing the correct adaptive control signal f
 To overcome this issue, the controller needs a way to distinguish between errors caused by the target moving and errors caused by a change in system dynamics.
 A simple and effective solution is to inhibit learning when the target has moved recently.
 This is accomplished by applying a low-pass filter to the signal representing the target location and then taking the difference between the target location and the low-pass filtered target location.
-The resulting signal becomes large when the target moves and then progressively decays back towards zero over time, as depicted in Figure \ref{fig:TMCSignal}.
+The resulting signal becomes large when the target moves and then progressively decays back towards zero over time. %, as depicted in Figure \ref{fig:TMCSignal}.
 This signal is four-dimensional, corresponding to the four dimensions of state being controlled ($x$, $y$, $z$, and yaw) and is used to inhibit learning in those particular dimensions accordingly.
 
-%TODO put in better quality figure here
-\begin{figure}
-\centering
-\includegraphics[width=0.2\textwidth]{./figures/TMCPlot1.png}
-\includegraphics[width=0.2\textwidth]{./figures/TMCPlot2.png}
-\caption{Learning Inhibition Signal}
-\label{fig:TMCSignal}
-\captionsetup{singlelinecheck=off,font=footnotesize}
-\caption*{\textit{Blue}: Target location changing after three seconds. \textit{Green}: Lowpass filter applied to the target location signal. \textit{Red}: Difference between the target and the filtered target signal.}
-\end{figure}
+%%TODO put in better quality figure here
+%\begin{figure}
+%\centering
+%\includegraphics[width=0.2\textwidth]{./figures/TMCPlot1.png}
+%\includegraphics[width=0.2\textwidth]{./figures/TMCPlot2.png}
+%\caption{Learning Inhibition Signal}
+%\label{fig:TMCSignal}
+%\captionsetup{singlelinecheck=off,font=footnotesize}
+%\caption*{\textit{Blue}: Target location changing after three seconds. \textit{Green}: Lowpass filter applied to the target location signal. \textit{Red}: Difference between the target and the filtered target signal.}
+%\end{figure}
 
 Figure \ref{fig:ImprovementComparison} compares the performance of an adaptive controller with each enhancement to one without, showing substantial improvement from these approaches.
 The network diagram of the final design of the adaptive controller is shown in Figure \ref{fig:NetFinal}.
+For further details see \cite{komer2015biologically}.
 
 \begin{figure}
 \centering
@@ -387,7 +388,8 @@ The network diagram of the final design of the adaptive controller is shown in F
 
 \begin{figure}
 \centering
-\includegraphics[width=0.4\textwidth]{./figures/QuadcopterNetworkTMCSimplifiedICRALegend.pdf}
+%\includegraphics[width=0.4\textwidth]{./figures/QuadcopterNetworkTMCSimplifiedICRALegend.pdf}
+\includegraphics[width=0.48\textwidth]{./figures/AdaptiveICRASmall.pdf}
 \caption{Adaptive Quadcopter Controller Network}
 \label{fig:NetFinal}
 \captionsetup{singlelinecheck=off,font=footnotesize}
