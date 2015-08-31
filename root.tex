@@ -73,19 +73,19 @@ On average the adaptive controller reached its target 15\% faster and with 69\% 
 \section{Introduction}
 
 The human motor control system is able to effectively compensate for changes in forces, torques, and inertial effects on the body.
-
+%sticking there together
 This ability to adapt to new dynamic properties of a system is extremely useful in robotics.
 When the precise environment that the robot will operate in is not fully known, or if there are unmodelled dynamics in the robot itself, it is useful for a control system that the robot uses to be adaptable to those environments.
 
-Recently, hardware inspired by the brain is being designed to take advantage of low power computation that borrows techniques from neural computation \cite{hasler2013finding, khan2008spinnaker, boahen2006neurogrid}. %[[PUT IN REFERENCES HERE]] %TODO mostly done now
+Recently, hardware inspired by the brain is being designed to take advantage of low power computation that borrows techniques from neural computation \cite{hasler2013finding, khan2008spinnaker, boahen2006neurogrid}.
 Such neuromorphic hardware is massively parallel and consumes much less power than traditional hardware.
 Computational power efficiency for these systems is currently about 4 orders of magnitude better than the power efficiency for standard hardware \cite{hasler2013finding}.
 The algorithms explored in this paper focus on being able to take advantage of such hardware.
 
 Specifically we develop and test a spiking, adaptive controller for use on a quadcopter platform.
 The simulated environment in which the quadcopter operates varies dramatically, causing changes in the dynamic properties of the system (e.g. changing wind conditions, or picking up a load of unknown mass).
-In this paper, we describe the design of the controller, it's mapping to spiking neurons, and demonstrate it's performance compared to standard and non-spiking controllers across five tasks. %TODO maybe put more tasks in this paper
-We show that this adaptive controller has the best performance of those tested. %TODO talk about learning over time as well?
+In this paper, we describe the design of the controller, it's mapping to spiking neurons, and demonstrate it's performance compared to standard and non-spiking controllers across five tasks.
+We show that this adaptive controller has the best performance of those tested.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{Background}
@@ -171,20 +171,22 @@ This paper employs biologically plausible spiking neurons as basis functions in 
 
 The first principle Neural Engineering Framework (NEF)\cite{eliasmith2004neural} provides a means of representing vectors using the properties of neurons as a basis.
 This is done through a nonlinear encoding mechanism carried out by the tuning curves of the neurons, and a weighted linear decoding of the responses of the neurons to retrieve an approximation of the vector being encoded.
-The second NEF principle is that a transformation can be applied to the underlying representation by specifying different weights on the linear decoding \eqref{eq:SecondPrinciple}. 
+The second NEF principle is that a transformation can be applied to the underlying representation by specifying different weights on the linear decoding \eqref{eq:SecondPrinciple}.
+
+\begin{equation} \label{eq:SecondPrinciple}
+\hat{f}(x) = \sum_{i} a_{i} x d_{i}^{f}
+\end{equation}
+
+Where $a_{i}$ is the neural activity and $d_{i}^{f}$ are the optimal linear decoders for computing the function $f$.
 Any computable function can be approximated through such a transform, and the degree of accuracy of the decoding is dependent on the number of neurons used and the complexity of the function.
 The third principle combines the first two to allow the implementation of linear and nonlinear dynamical systems specified in the vector space to be simulated directly in spiking neurons.
 Consequently, the neurons themselves are a part of a dynamical system where timing effects and filters across connections play a role in the behaviour of the system \eqref{eq:ThirdPrinciple}. 
-%[[PUT IN EQUATION FOR SECOND AND THIRD PRINCIPLES]] %TODO Maybe put an equation for the 2nd and third principles to show how neurons relate to vector spaces in a dynamical system?
-\begin{equation} \label{eq:SecondPrinciple}
-\hat{f}(x(t)) = \sum_{i} a_{i} (x(t)) \phi_{i}^{f}
-\end{equation}
 
 \begin{equation} \label{eq:ThirdPrinciple}
-\sum_{n} \delta (t - t_{in}) = G_{i} [ \alpha_{i} \langle \tilde{\phi_{i}} (h_{i} (t) * [ A^{\prime} x(t) + B^{\prime} u(t)]) \rangle_{m} + J_{i}^{bias}]
+a_i(t) = G_i [ \alpha_i \langle e_i ( h_i(t)  * f(x(t)) ) \rangle + J^{bias}_i ]
 \end{equation}
 
-%It also specifies a means of performing transformation
+Where $G_{i}$ is a neural nonlinearity and $\alpha$ and $J^{bias}$ are the gain and bias determining the neuron response function. The $h(t)$ is the post-synaptic response, and the vector $e$ acts as an encoder into the state space, which accounts for the neuron tuning curve.
 For more detail on the NEF, see \cite{eliasmith2004neural}.%, stewart2011neural, eliasmith2013build}. % put this line in if you think the reader might want more details.
 
 The software package Nengo \cite{bekolay2013nengo} implements the principles of the NEF and provides an easy to use Python interface for building complex models.
@@ -193,6 +195,7 @@ Ensembles are groups of neurons, connections link ensembles or nodes, nodes prov
 
 Nengo supports a variety of underlying neuron models in its ensembles.
 The most commonly used is the Leaky Integrate-and-Fire (LIF) neuron \cite{burkitt2006review}.
+Ensembles can also be run in direct mode, in which functions are computed explicitly rather than with neurons.
 
 Once a high-level network structure has been specified that implements a specific dynamical system, Nengo can build and run a simulation of this network for either a specified duration of time, or until a stop signal is generated. 
 A default time step of 1ms is typically used in Nengo models, which provides a reasonable trade-off between accuracy and run-time.
@@ -202,7 +205,6 @@ A default time step of 1ms is typically used in Nengo models, which provides a r
 We use the adaptive control methods described above to build a quadcopter controller using Nengo.
 Initially, the three principles are used to embed a standard PD controller into spiking neurons.
 Then, an ensemble of simulated neurons is used as a set of basis functions for the physical model, and the decoders of these neurons are used as the vector of unknown constant parameters.
-%TODO nengo screen capture of whole model?
 A biologically plausible learning rule able to learn NEF networks known as the Prescribed Error Sensitivity (PES) rule is used to update the decoder values \cite{bekolay2013simultaneous}. 
 
 To exploit PES, we first create a connection from an ensemble of spiking neurons representing the state of the system to an ensemble or node representing the output of the controller. 
@@ -218,9 +220,6 @@ The learning rate is a dimensionless parameter that needs to be tuned for the sp
 \Delta \bm{d_{i}} = \kappa \bm{E} a_{i}
 \end{equation}
 
-%It is dependent on the simulation time step, the number of neurons in the state ensemble, as well as how responsive the model needs to be to changes. 
-%A larger learning rate will cause larger reactions to error, effectively making the system trust its current measurements more than historical ones. 
-%A smaller time-step means that these changes will occur more frequently, so the net change over time will be greater. 
 A larger number of neurons means that the changes will be greater, as there will be more decoders changing. The overall transformation is a weighted sum of these decoders and the neuron tuning curves. 
 
 \subsection{Simulation}
@@ -228,8 +227,6 @@ A larger number of neurons means that the changes will be greater, as there will
 The Virtual Robotics Experimentation Platform (V-REP) \cite{vrep} is used to validate and test the quadcopter controller.
 This software package includes a model of a quadcopter, and allows the construction of intricate 3D virtual environments for the quadcopter to interact with.
 External forces can be applied to the quadcopter from within this environment.
-%This simulation environment allows
-%Within this environment
 An example of a region within the simulation environment is shown in Figure \ref{fig:vrep_screenshot}.
 
 \begin{figure}
@@ -310,7 +307,7 @@ The network can be simplified further by multiplying the gain matrix with the ro
 
 \begin{figure}
 \centering
-\includegraphics[width=0.4\textwidth]{./figures/SimpleNetworkICRA.pdf}
+\includegraphics[width=0.4\textwidth]{./figures/QuadcopterNetworkSimpleLegend.pdf}
 \caption{Basic Quadcopter Controller Network for PD Control}
 \label{fig:NetBasic}
 \end{figure}
@@ -390,7 +387,7 @@ The network diagram of the final design of the adaptive controller is shown in F
 
 \begin{figure}
 \centering
-\includegraphics[width=0.4\textwidth]{./figures/AdaptiveNetworkICRA.pdf}
+\includegraphics[width=0.4\textwidth]{./figures/QuadcopterNetworkTMCSimplifiedICRALegend.pdf}
 \caption{Adaptive Quadcopter Controller Network}
 \label{fig:NetFinal}
 \captionsetup{singlelinecheck=off,font=footnotesize}
@@ -441,12 +438,8 @@ A value of 30 is recorded in the time-to-target trials if the quadcopter never r
 Results from the benchmark tasks are displayed in Figure \ref{fig:Benchmarks}.
 The adaptive controller performed as well or better than all other controllers across the tasks and metrics.
 Consequently it demonstrates the overall best performance.
-%[[PUT IN RANKING CHART/OVERALL RMS/TIME TABLE HERE, QUOTE THIS IN ABSTRACT]]
 The mean across all trials of each task is depicted in Figure \ref{fig:OverallPerformance}.
 The neural adaptive controller reached the target 15\% faster and with 69\% less error than the second best controller tested.
-
-%TODO (Stick your 'overall' performance metric in here, describe it and then report the number... that can also go in the abstract, as it is a quantitative claim about the quality of the controller compared to the others :) )
-
 
 \begin{figure}
 \centering
@@ -455,17 +448,17 @@ The neural adaptive controller reached the target 15\% faster and with 69\% less
 \caption{Performance on Benchmark Tasks}
 \label{fig:Benchmarks}
 \captionsetup{singlelinecheck=off,font=footnotesize}
-\caption*{The performance of five different quadcopter controllers are compared across five benchmark tasks using two metrics. \textit{Neural Adaptive} is the adaptive controller introduced in this paper. \textit{PID SA} is a PID controller with a slow integral gain and uses the Adaptive Transform to calculate the integral. \textit{PID FA} is a PID controller with a fast integral gain and uses the Adaptive Transform to calculate the integral. \textit{PID SC} is a PID controller with a slow integral gain and uses the Control Transform to calculate the integral. \textit{PID FC} is a PID controller with a fast integral gain and uses the Control Transform to calculate the integral. The neural adaptive controller equals or betters all other controllers across all tasks and metrics.}
+\caption*{The performance of five different quadcopter controllers are compared across five benchmark tasks using two metrics. \textit{Neural Adaptive} is the adaptive controller introduced in this paper. \textit{PID SA} is a PID controller with a slow integral gain and uses the Adaptive Transform to calculate the integral. \textit{PID FA} is a PID controller with a fast integral gain and uses the Adaptive Transform to calculate the integral. \textit{PID SC} is a PID controller with a slow integral gain and uses the Control Transform to calculate the integral. \textit{PID FC} is a PID controller with a fast integral gain and uses the Control Transform to calculate the integral.}
 \end{figure}
 
 \begin{figure}
 \centering
-\includegraphics[width=0.22\textwidth]{./figures/MeanRMSFinal.png}
-\includegraphics[width=0.22\textwidth]{./figures/MeanTimeFinal.png}
+\includegraphics[width=0.22\textwidth]{./figures/MeanRMSLabel.png}
+\includegraphics[width=0.22\textwidth]{./figures/MeanTimeLabel.png}
 \caption{Overall Performance}
 \label{fig:OverallPerformance}
 \captionsetup{singlelinecheck=off,font=footnotesize}
-\caption*{}
+\caption*{Mean performance across all five tasks. The neural adaptive controller scores the best on both metrics.}
 \end{figure}
 
 
@@ -520,9 +513,7 @@ The algorithms chosen have the capability to be run on neuromorphic harware, lev
 
 \section*{Acknowledgment}
 
-TODO: put any funding stuff here
-
-
+This work was supported by CFI and OIT infrastructure funding and grants from Canada Research Chairs, NSERC Discovery grant 261453, ONR grant N000141310419, AFOSR grant FA8655-13-1-3084 and OGS graduate funding.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
