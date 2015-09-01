@@ -1,7 +1,7 @@
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %2345678901234567890123456789012345678901234567890123456789012345678901234567890
 %        1         2         3         4         5         6         7         8
-
+\pdfminorversion=4
 \documentclass[letterpaper, 10 pt, conference]{ieeeconf}  % Comment this line out if you need a4paper
 
 %\documentclass[a4paper, 10pt, conference]{ieeeconf}      % Use this line for a4 paper
@@ -170,7 +170,7 @@ This paper employs biologically plausible spiking neurons as basis functions in 
 
 The first principle Neural Engineering Framework (NEF)\cite{eliasmith2004neural} provides a means of representing vectors using the properties of neurons as a basis.
 This is done through a nonlinear encoding mechanism carried out by the tuning curves of the neurons, and a weighted linear decoding of the responses of the neurons to retrieve an approximation of the vector being encoded.
-The second NEF principle is that a transformation can be applied to the underlying representation by specifying different weights on the linear decoding.% \eqref{eq:SecondPrinciple}.
+The second NEF principle \eqref{eq:SecondPrinciple} is that a transformation can be applied to the underlying representation by specifying different weights on the linear decoding.% \eqref{eq:SecondPrinciple}.
 
 \begin{equation} \label{eq:SecondPrinciple}
 \hat{f}(x) = \sum_{i} a_{i} x d_{i}^{f}
@@ -178,7 +178,7 @@ The second NEF principle is that a transformation can be applied to the underlyi
 
 Where $a_{i}$ is the neural activity and $d_{i}^{f}$ are the optimal linear decoders for computing the function $f$.
 Any computable function can be approximated through such a transform, and the degree of accuracy of the decoding is dependent on the number of neurons used and the complexity of the function.
-The third principle combines the first two to allow the implementation of linear and nonlinear dynamical systems specified in the vector space to be simulated directly in spiking neurons.
+The third principle \eqref{eq:ThirdPrinciple} combines the first two to allow the implementation of linear and nonlinear dynamical systems specified in the vector space to be simulated directly in spiking neurons.
 Consequently, the neurons themselves are a part of a dynamical system where timing effects and filters across connections play a role in the behaviour of the system.% \eqref{eq:ThirdPrinciple}. 
 
 \begin{equation} \label{eq:ThirdPrinciple}
@@ -521,8 +521,5 @@ This work was supported by CFI and OIT infrastructure funding and grants from Ca
 
 \bibliographystyle{IEEEtran}
 \bibliography{IEEEabrv,root}
-%\nocite{*}
-%TODO clean up the reference style to look good in IEEE format
-%TODO reference thesis
 
 \end{document}
